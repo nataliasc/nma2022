@@ -63,7 +63,7 @@ def eval_model(model, data_loader, device=DEVICE):
             kl_log.append(kl_div)
             # compute batch mean pearsonr
             metric_pr = PearsonR(reduction='mean', batch_first=True)
-            pear_corr = metric_pr(preds, target).item()
+            pear_corr = metric_pr(torch.flatten(preds, start_dim=1), torch.flatten(target, start_dim=1)).item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
     return np.mean(kl_log), np.mean(corr_log)
