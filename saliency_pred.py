@@ -30,11 +30,6 @@ set_seed(seed=SEED)
 
 
 #################
-# training loop
-#################
-
-
-#################
 # evaluation function
 #################
 
@@ -63,19 +58,12 @@ def eval_model(model, data_loader, device=DEVICE):
             kl_log.append(kl_div)
             # compute batch mean pearsonr
             metric_pr = PearsonR(reduction='mean', batch_first=True)
-            pear_corr = metric_pr(torch.flatten(preds, start_dim=1), torch.flatten(target, start_dim=1)).item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
+            pear_corr = metric_pr(torch.flatten(preds, start_dim=1), torch.flatten(target,
+                                                                                   start_dim=1)).item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
     return np.mean(kl_log), np.mean(corr_log)
 
-# this metric requires different target data format,
-# def norm_scanpath_saliency(pred_map, target_fixation_map):
-#     '''
-#     computes Normalized Scanpath Saliency which measures the average normalized saliency between two fixation maps
-#
-#     :arg pred_map: network output
-#     :arg target_map: ground truth fixation map containing binary values 0 and 1
-#     :return: nss
-#     '''
-#
-#     return norm_ss
+#################
+# training loop
+#################

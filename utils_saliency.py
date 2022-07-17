@@ -51,3 +51,16 @@ def set_seed(seed=None, seed_torch=True):
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
     print(f'Random seed {seed} has been set.')
+
+
+# this metric requires different target data format,
+# def norm_scanpath_saliency(pred_map, target_fixation_map):
+#     '''
+#     computes Normalized Scanpath Saliency which measures the average normalized saliency between two fixation maps
+#
+#     :arg pred_map: network output
+#     :arg target_map: ground truth fixation map containing binary values 0 and 1
+#     :return: nss
+#     '''
+#
+#     return norm_ss
