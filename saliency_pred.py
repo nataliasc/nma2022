@@ -47,6 +47,10 @@ def eval_model(model, data_loader, device=DEVICE):
     KL divergence, Pearson's correlation coefficient, Normalized Scanpath Saliency
     '''
 
+    #list containing metric for each batch
+    kl_log = []
+    corr_log = []
+
     with torch.no_grad():
         for batch_id, batch in enumerate(data_loader):
             # Extract minibatch data
@@ -55,11 +59,13 @@ def eval_model(model, data_loader, device=DEVICE):
             preds = model(data)
             # compute batch mean kl div
             kl_div = F.kl_div(preds, target, reduction='batchmean').item()
+            kl_log.append(kl_div)
             # compute batch mean pearsonr
             metric_pr = PearsonR(reduction='mean', batch_first=True)
-            pear_corr = metric_pr(preds, target)
+            pear_corr = metric_pr(preds, target).item()
+            corr_log.append(pear_corr)
 
-    return kl_div, pear_corr
+    return np.mean(kl_log), np.mean(corr_log)
 
 # this metric requires different target data format,
 # def norm_scanpath_saliency(pred_map, target_fixation_map):
