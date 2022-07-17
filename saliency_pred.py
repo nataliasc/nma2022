@@ -3,6 +3,7 @@ This file contains the code for saliency prediction algorithm.
 Creator: Lucy, Kaitlyn, Maria, Linas
 """
 import torch.nn.functional as F
+from audtorch.metrics import PearsonR
 
 from utils_saliency import *
 
@@ -31,8 +32,6 @@ DEVICE = set_device()
 #################
 # evaluation function
 #################
-from audtorch.metrics import PearsonR
-
 
 def eval_model(model, data_loader, device=DEVICE):
     '''
