@@ -7,11 +7,12 @@ from audtorch.metrics import PearsonR
 
 from utils_saliency import *
 
-#set device and randome seed
+# set device and randome seed
 DEVICE = set_device()
 
 SEED = 2022
 set_seed(seed=SEED)
+
 
 #################
 # data preprocessing
@@ -38,16 +39,16 @@ set_seed(seed=SEED)
 #################
 
 def eval_model(model, data_loader, device=DEVICE):
-    '''
+    """
     evaluates the performance of saliency prediction by giving separate losses
     :arg model: defined network object
     :arg data_loader: dataloader object containing either validation or test set
 
     :return: mean of each of three evaluation metrics across all batches:
     KL divergence, Pearson's correlation coefficient, Normalized Scanpath Saliency
-    '''
+    """
 
-    #list containing metric for each batch
+    # list containing metric for each batch
     kl_log = []
     corr_log = []
 
