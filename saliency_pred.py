@@ -7,7 +7,7 @@ from audtorch.metrics import PearsonR
 
 from utils_saliency import *
 
-# set device and randome seed
+# set device and random seed
 DEVICE = set_device()
 
 SEED = 2022
