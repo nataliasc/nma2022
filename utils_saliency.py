@@ -1,5 +1,6 @@
 '''
 this file contains some utility functions used in the saliency prediction file to keep the main file clean
+some functions taken from NMA2022 tutorial
 '''
 import random
 
