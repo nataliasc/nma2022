@@ -58,7 +58,8 @@ def eval_model(model, data_loader, device):
             # compute batch mean kl div
             kl_div = F.kl_div(preds, target, reduction='batchmean').item()
             # compute batch mean pearsonr
-            pear_corr = PearsonR(preds, target, reduction='mean', batch_first=True)
+            metric_pr = PearsonR(reduction='mean', batch_first=True)
+            pear_corr = metric_pr(preds, target)
 
     return kl_div, pear_corr
 
