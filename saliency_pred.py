@@ -95,9 +95,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
     # define metrics
     metrics = {'train_loss': [],
-               'train_acc': [],
                'val_loss': [],
-               'val_acc': [],
                'val_idx': []}
 
     # step_idx is the counter of BATCHES within an epoch
@@ -107,9 +105,8 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     # tqdm is a library for loops in ML
     for epoch in tqdm(range(MAX_EPOCHS)):
 
-        # at the start of the epoch, training loss and accuracy is 0
+        # at the start of the epoch, training loss is 0
         running_loss = 0.0
-        running_acc = 0.0
 
         # within an epoch, loop over batches of data
         for batch_id, batch in enumerate(train_loader):
@@ -130,53 +127,36 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
             # 1st arg: predictions, 2nd arg: data
             loss = loss_function(preds, labels)
 
-            # calculate model accuracy
-            acc = torch.mean(1.0 * (preds.argmax(dim=1) == labels))
-            # TODO get rid of acc
-
             # 4. calculate the gradients
             loss.backward()
 
             # 5. update the parameter weights based on the gradients
             optimizer.step()
 
-            # add metrics for plotting: specify if running on CPU or CUDA
-            # CPU: loss.cpu().item()
-            # GPU: loss.cuda().item()
-            # metrics['train_loss'].append(loss.cuda().item())
-            # metrics['train_acc'].append(acc.cuda().item())
+            # add metrics for plotting
             metrics['train_loss'].append(loss.cpu().item())
-            metrics['train_acc'].append(acc.cpu().item())
 
-            # Every 1 in VAL_FREQ iterations, get validation accuracy
+            # Every 1 in VAL_FREQ iterations, get validation metrics and print them
             # calling eval_model
             if batch_id % VAL_FREQ == (VAL_FREQ - 1):
-                val_loss, val_acc = eval_model(model, val_loader,
-                                               num_batches=100,
-                                               device=device)
+                val_loss = eval_model(model, val_loader, num_batches=100, device=device)
 
                 metrics['val_idx'].append(step_idx)
                 metrics['val_loss'].append(val_loss)
-                metrics['val_acc'].append(val_acc)
 
                 print(f"[VALID] Epoch {epoch + 1} - Batch {batch_id + 1} - "
-                      f"Loss: {val_loss:.3f} - Acc: {100 * val_acc:.3f}%")
+                      f"Loss: {val_loss:.3f}")
 
-            # print statistics: specify if CPU (cpu) or GPU (cuda)
-            # running_loss += loss.cuda().item()
-            # running_acc += acc.cuda().item()
+            # print statistics
             running_loss += loss.cpu().item()
-            running_acc += acc.cpu().item()
 
             # Print results every LOG_FREQ minibatches
             if batch_id % LOG_FREQ == (LOG_FREQ - 1):
                 print(f"[TRAIN] Epoch {epoch + 1} - Batch {batch_id + 1} - "
-                      f"Loss: {running_loss / LOG_FREQ:.3f} - "
-                      f"Acc: {100 * running_acc / LOG_FREQ:.3f}%")
+                      f"Loss: {running_loss / LOG_FREQ:.3f} - ")
 
-                # reset loss and accuracy
+                # reset loss
                 running_loss = 0.0
-                running_acc = 0.0
 
                 # PLOT THE RESULTS
     fig, ax = plt.subplots(1, 2, figsize=(10, 4))
@@ -188,12 +168,6 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     ax[0].set_ylabel('Loss')
     ax[0].legend()
 
-    ax[1].plot(range(len(metrics['train_acc'])), metrics['train_acc'],
-               alpha=0.8, label='Train')
-    ax[1].plot(metrics['val_idx'], metrics['val_acc'], label='Valid')
-    ax[1].set_xlabel('Iteration')
-    ax[1].set_ylabel('Accuracy')
-    ax[1].legend()
     plt.tight_layout()
     plt.show()
 
