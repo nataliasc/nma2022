@@ -132,6 +132,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # calculate model accuracy
             acc = torch.mean(1.0 * (preds.argmax(dim=1) == labels))
+            # TODO get rid of acc
 
             # 4. calculate the gradients
             loss.backward()
