@@ -31,7 +31,7 @@ obs, reward, done, terminal, info = env.step(action) # why both done and termina
 model = DQN(env)
 model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
 
-
+# %%
 #############################
 # initialise memory buffer
 #############################
