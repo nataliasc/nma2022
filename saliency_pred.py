@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import tqdm
 from audtorch.metrics import PearsonR
 
-from utils_saliency import *
+from utils_saliency import set_device, set_seed
 
 # set device and random seed
 DEVICE = set_device()
@@ -79,18 +79,18 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
           VAL_FREQ=200,
           device=DEVICE):
     """
-  trains the model 
+  trains the model
   :arg model: defined network object
   :arg train_loader: dataloader object containing the training set
   :arg val_loader: dataloader object containing the validation set
-  :arg optimizer: optimizer for the network (torch.optim object) 
-  :arg loss_function: loss function used in the network (may need to specify if used for CPU or GPU) 
+  :arg optimizer: optimizer for the network (torch.optim object)
+  :arg loss_function: loss function used in the network (may need to specify if used for CPU or GPU)
   :arg eval_model: evaluation model used
   :arg MAX_EPOCHS: number of epochs used to train the model
   :arg LOG_FREQ (int): model prints training statistics every LOG_FREQ batches
   :arg VAL_FREQ (int): frequency for evaluating the validation metrics (measured in batches)
   :arg device (str, 'cpu' or 'cuda:0'): what device the network is trained on
-  :return: trained model 
+  :return: trained model
   """
 
     # define metrics
