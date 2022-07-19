@@ -9,6 +9,7 @@ from utils_saliency import *
 
 # set device and random seed
 DEVICE = set_device()
+print(DEVICE + 'is available')
 
 SEED = 2022
 set_seed(seed=SEED)
@@ -29,8 +30,10 @@ env = FrameStack(env, 4, new_step_api=True)
 env.reset()
 action = random.randrange(env.action_space.n)
 obs, reward, done, terminal, info = env.step(action)
-model = DQN(env)
+model = DQN(env).to(DEVICE)
 q = model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
+print('q values output by model')
+print(q)
 
 # %%
 #############################
