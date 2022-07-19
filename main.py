@@ -1,6 +1,10 @@
 """
 this is the main script for training and testing DQN
 """
+import gym
+from gym.wrappers import AtariPreprocessing
+
+from model import DQN
 from utils_saliency import *
 
 # set device and random seed
@@ -20,7 +24,13 @@ env =  # gym environment
 #############################
 # initialise environment
 #############################
-
+env = gym.make("ALE/Breakout-v5", frameskip=1)
+env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
+env.reset()
+action = random.randrange(env.action_space.n)
+obs, reward, done, terminal, info = env.step(action) # why both done and terminal?
+model = DQN(env)
+model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
 
 
 #############################
