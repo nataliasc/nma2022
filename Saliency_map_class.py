@@ -20,28 +20,23 @@ Data set:
 
 
 # Imports
-import numpy as np
 
 import torch
-import torchvision
-import torchvision.datasets as datasets
-import torch.nn.functional as F
 import torch.nn as nn
-import torch.optim as optim
 
 
 # In[14]:
 
 
-class Conv_Deconv(torch.nn.Module):
+class Conv_Deconv(nn.Module):
     def __init__(self):
         super().__init__()
         # super(Conv_Deonv, self).__init__()
-        #image_width = 160
+        #image_width = 160  # TODO 84*84 input size
         #image_height = 210
-        #batch_size = 4
+        #n_frames = 4
         #self.in_dim = image_width * image_length * batch_size
-        self.conv1 = nn.Conv2d(in_channels=1,out_channels=64, kernel_size=(3, 3), padding=1)
+        self.conv1 = nn.Conv2d(in_channels=1,out_channels=64, kernel_size=(3, 3), padding=1)  # TODO modify inchannel
         self.residual1 = nn.Sequential(
           torch.nn.Conv2d(batch_size = 4, in_channels = 64, out_channels = 64, kernel_size = 1, padding = 1),
           torch.nn.BatchNorm2d(64),
@@ -64,14 +59,14 @@ class Conv_Deconv(torch.nn.Module):
             #torch.nn.Linear(160*210*64, 64)
         )
     
-        self.residual = torch.ReLU(self.residual1 + self.residual2)
+        self.residual = torch.ReLU(self.residual1 + self.residual2)  # TODO this is in the wrong place
 
         #self.bn2 = nn.BatchNorm2d(256)
         self.encoder = torch.nn.Sequential(
             #Input = 1 x 160 x 210, Output = 96 x 160 x 210
-            torch.nn.Conv2d(batch_size = 4, in_channels = 1, out_channels = 64, kernel_size = 3, padding = 1),
-            #torch.nn.BatchNorm2d(64),
-            #torch.nn.ReLU(),
+            torch.nn.Conv2d(batch_size = 4, in_channels = 1, out_channels = 64, kernel_size = 3, padding = 1),  # TODO conv2d doens't take batch_size as input
+            torch.nn.BatchNorm2d(64),
+            torch.nn.ReLU(),
             #torch.nn.MaxPool2d(kernel_size=2),
 
             torch.nn.Conv2d(in_channels = 64, out_channels = 128, kernel_size = 3, padding = 1),
@@ -116,7 +111,7 @@ class Conv_Deconv(torch.nn.Module):
             #torch.nn.Linear(160*210*256, 256)
             )
             
-        self.inception_before = torch.cat((self.inception1, self.inception2, self.inception3), dim=1)
+        self.inception_before = torch.cat((self.inception1, self.inception2, self.inception3), dim=1)  # TODO need to be in forward
         self.inception_after = torch.Linear(160*210*256*3, 160*210*256)
         
 			#torch.nn.Flatten(),
@@ -138,8 +133,11 @@ class Conv_Deconv(torch.nn.Module):
             torch.nn.ConvTranspose2d(64, 1, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)  
 )
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, x):  # x 4*84*84
+        out1 = torch.relu(self.conv1(x))  # out1 size = 64*featuremaph*featuremapw
+
+
+        return self.model(x)   # predicted map 1*84*84
 
 
 # Questions:
@@ -151,5 +149,7 @@ class Conv_Deconv(torch.nn.Module):
 # In[ ]:
 
 
+# TODO create test_data=tensor.ones(4*84*84)
+create the network
 
 

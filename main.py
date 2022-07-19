@@ -17,7 +17,6 @@ set_seed(seed=SEED)
 # hyperparameters
 #############################
 NUM_TEST = 10  # number of tests on agent
-env =  # gym environment
 
 
 
