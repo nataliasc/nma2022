@@ -1,7 +1,9 @@
+import random
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import random
+
 
 class DQN(nn.Module):
     def __init__(self, env, learning_rate=1e-3, **kwargs):
