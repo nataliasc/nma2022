@@ -8,8 +8,7 @@ class DQN(nn.Module):
         super().__init__(**kwargs)
         self.output_shape = env.action_space.n
 
-
-        self.conv1 = nn.Conv2d(in_channels=1,
+        self.conv1 = nn.Conv2d(in_channels=4,
                                out_channels=32, kernel_size=8,
                                stride=4)
 
@@ -39,6 +38,6 @@ if __name__ == '__main__':
         env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
         env.reset()
         action = random.randrange(env.action_space.n)
-        obs, reward, done, terminal, info = env.step(action) # why both done and terminal?
+        obs, reward, done, truncated, info = env.step(action) # why both done and terminal?
         model = DQN(env)
         model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
