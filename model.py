@@ -1,7 +1,9 @@
+import random
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import random
+
 
 class DQN(nn.Module):
     def __init__(self, env, learning_rate=1e-3, **kwargs):
@@ -9,7 +11,7 @@ class DQN(nn.Module):
         self.output_shape = env.action_space.n
 
 
-        self.conv1 = nn.Conv2d(in_channels=1,
+        self.conv1 = nn.Conv2d(in_channels=4,
                                out_channels=32, kernel_size=8,
                                stride=4)
 

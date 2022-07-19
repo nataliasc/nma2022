@@ -2,7 +2,7 @@
 this is the main script for training and testing DQN
 """
 import gym
-from gym.wrappers import AtariPreprocessing
+from gym.wrappers import AtariPreprocessing, FrameStack
 
 from model import DQN
 from utils_saliency import *
@@ -25,11 +25,12 @@ NUM_TEST = 10  # number of tests on agent
 #############################
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
+env = FrameStack(env, 4, new_step_api=True)
 env.reset()
 action = random.randrange(env.action_space.n)
-obs, reward, done, terminal, info = env.step(action) # why both done and terminal?
+obs, reward, done, terminal, info = env.step(action)
 model = DQN(env)
-model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
+q = model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
 
 # %%
 #############################
