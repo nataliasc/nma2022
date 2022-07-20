@@ -47,7 +47,8 @@ class Agent():
         for episode in range(num_episodes):
 
             #Fill ReplayBuffer with enough samples
-            while len(self.buffer) < self.batch_size:
+            for i in range(self.batch_size):
+            #while len(self.buffer) < self.batch_size:
                 #reset the environment
                 state = self.env.reset()
                 done = 0
