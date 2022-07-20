@@ -9,6 +9,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 
+
 class Agent():
     def __init__(self,
                  env,
@@ -21,7 +22,8 @@ class Agent():
         self.env = env
         self.Q_target = DQN(env, learning_rate)
         self.Q = DQN(env, learning_rate)
-        self.Q_target.load_state_dict(self.Q.state_dict()) # set the weights of the target network to those of the policy network
+        self.Q_target.load_state_dict(
+            self.Q.state_dict())  # set the weights of the target network to those of the policy network
         self.action_space = env.action_space.n
         self.buffer = ReplayBuffer(env, buffer_size, batch_size=batch_size)
         self.gamma = gamma

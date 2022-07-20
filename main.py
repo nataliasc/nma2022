@@ -15,7 +15,7 @@ import numpy as np
 
 # set device and random seed
 DEVICE = set_device()
-print(DEVICE + 'is available')
+print(DEVICE + ' is available')
 
 SEED = 2022
 set_seed(seed=SEED)
