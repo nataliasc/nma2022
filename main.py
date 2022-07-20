@@ -6,6 +6,7 @@ from gym.wrappers import AtariPreprocessing, FrameStack
 
 from model import DQN
 from utils_saliency import *
+import random
 
 # set device and random seed
 DEVICE = set_device()
@@ -18,6 +19,9 @@ set_seed(seed=SEED)
 # hyperparameters
 #############################
 NUM_TEST = 10  # number of tests on agent
+MEM_SIZE = int(1e6)
+EPISODES = int(1e5) # total training episodes
+BATCH_SIZE = 64
 
 
 
@@ -32,6 +36,7 @@ action = random.randrange(env.action_space.n)
 obs, reward, done, terminal, info = env.step(action)
 model = DQN(env).to(DEVICE)
 q = model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
+
 print('q values output by model')
 print(q)
 
@@ -105,7 +110,26 @@ def test(save=False):
     return total_reward
 
 
+q_func = DQN(env).to(DEVICE)
 
 #############################
 # training loop
 #############################
+avg_q =0
+
+for episode in range(EPISODES):
+
+    env.reset()
+    state, _, done, _=env.step(action)
+
+    while not done:
+        q_values = q_func(state.to(DEVICE))
+        if np.random.random() > scheduler.epsilon():  # epsilon-random policy
+            action = torch.argmax(q_values, dim=1)
+        else:
+            action = env.action_space.sample()
+
+        avg_q = 0.9 * avg_q + 0.1 * q_values.mean().item()
+
+        lives= not env.lives()
+
