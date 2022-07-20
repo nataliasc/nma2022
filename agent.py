@@ -48,14 +48,14 @@ class Agent():
             while not done:
 
                 # take an action
-                q_values = self.Q(state)
+                q_values = self.Q(torch.Tensor(state))
 
-                if random.random() < epsilon:  # epsilon-random policy
+                if random.random() < self.epsilon:  # epsilon-random policy
                     action = self.env.action_space.sample()
                 else:
                     action = torch.argmax(q_values)
 
-                next_state, reward, done, truncated, info = self.env.step(action)
+                next_state, reward, done, info = self.env.step(action)
                 # add the tuple to the ReplayBuffer
                 sample = (state, action, reward, next_state, done)
                 self.buffer.store(sample)
