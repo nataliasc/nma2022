@@ -14,7 +14,7 @@ class ReplayBuffer():
         self.done = np.empty((size))
 
     def store(self, sample):
-        state, action, reward, next_state, done = (sample)
+        state, action, reward, next_state, done = sample
 
         self.states[self._idx] = state
         self.actions[self._idx] = action
