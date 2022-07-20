@@ -7,6 +7,7 @@ from gym.wrappers import AtariPreprocessing, FrameStack
 from model import DQN
 from replaybuffer import ReplayBuffer
 from utils_saliency import set_device, set_seed
+from agent import Agent
 import random
 import torch
 import numpy as np
