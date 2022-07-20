@@ -25,7 +25,7 @@ def read_txt_data(txt_path, time_frame):
             if len(currentline) > num_datapoints:
                 all_lines.append(currentline[:num_datapoints])
             else:
-                filler = np.full(num_datapoints - len(currentline), np.NaN).tolist()
+                filler = np.full(num_datapoints - len(currentline), -1).tolist()
                 currentline += filler
                 all_lines.append(currentline)
 
@@ -68,7 +68,7 @@ def load_frames_gazetxt(trial_id, metadataframe, data_path='raw_data/breakout/')
     for path in frame_glob:
         grey = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         # resize img to stated in original atari paper
-        grey = cv2.resize(grey, (110, 84))
+        grey = cv2.resize(grey, (84, 84))
         frames_grey.append(grey)
         # get frame number to sort the frames
         index = get_frame_num(path)
@@ -84,16 +84,19 @@ def load_frames_gazetxt(trial_id, metadataframe, data_path='raw_data/breakout/')
     return frames_grey, gaze_data
 
 
-def crop_frame(frames, w, h):
-    """
-    crop the center w*h of the image
-    :param frames: 3d np array containing all frames
-    :param w: cropped width
-    :param h: cropped height
-    :return: 3d np array with cropped frames
-    """
-    _, x, y = frames.shape
-    startx = int(x/2 - w/2)
-    starty = int(y/2 - h/2)
+# turn gaze position from str(num.num) to list[num, num]
+def gaze_str_to_intlist(gaze_pos):
+    '''
+    convert strings of gaze position read from txt file to list containing lists of gaze pos in format [int, int]
+    :param gaze_pos: list of strings of 'num.num'
+    :return: one list of [int, int] of gaze position
+    '''
+    for i in range(len(gaze_pos)):
+        if gaze_pos[i] == 'null\n':  # if no gaze pos is available
+            continue
+        elif gaze_pos[i] != -1:
+            x, y = gaze_pos[i].split('.')
+            pos = [int(x), int(y)]
+            gaze_pos[i] = pos
 
-    return frames[:, startx:startx+w, starty:starty+h]
+    return gaze_pos

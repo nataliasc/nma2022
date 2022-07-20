@@ -23,31 +23,22 @@ print(metadata_breakout.head())
 all_grey_frames, gaze_data = load_frames_gazetxt(58, metadata_breakout)
 
 # %%
-# crop all grey frames
-img_w = 84
-img_h = 84
+################################
+# preprocess frames
+################################
 
-cropped_frames = crop_frame(all_grey_frames, img_w, img_h)
+
 
 # %%
-for i in range(10):
-    plt.imshow(cropped_frames[i])
-    plt.show()
-# %%
-# turn gaze position from str(num.num) to list[num, num]
-def gaze_str_to_intlist(gaze_pos):
-    '''
-    convert strings of gaze position read from txt file to list containing lists of gaze pos in format [int, int]
-    :param gaze_pos: list of strings of 'num.num'
-    :return: one list of [int, int] of gaze position
-    '''
-    for i in range(len(gaze_pos)):
-        if gaze_pos[i] != np.NaN:
-            x, y = gaze_pos[i].split('.')
-            pos = [int(x), int(y)]
-            gaze_pos[i] = pos
-
-    return gaze_pos
+################################
+# preprocess gaze & create saliency density map
+################################
+# generate nd array with gaze positions (might be null, if no data marked as -1)
+gaze_pos_fr = []
+for i in range(len(gaze_data)):
+    positions = gaze_str_to_intlist(gaze_data[i][6:])
+    gaze_pos_fr.append(positions)
+gaze_pos_fr = np.array(gaze_pos_fr)
 
 # %%
 # per subject
