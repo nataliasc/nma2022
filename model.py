@@ -26,7 +26,7 @@ class DQN(nn.Module):
         x = F.leaky_relu(self.conv1(x), 0.01)
         x = F.leaky_relu(self.conv2(x), 0.01)
         x = F.leaky_relu(self.conv3(x), 0.01)
-        x = torch.flatten(x)
+        x = torch.flatten(x, start_dim=1)
         x = F.leaky_relu(self.fc1(x))
         x = self.fc2(x)
         return x
@@ -35,9 +35,10 @@ if __name__ == '__main__':
         import gym
         from gym.wrappers import AtariPreprocessing
         env = gym.make("ALE/Breakout-v5", frameskip=1)
-        env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
-        env.reset()
-        action = env.observation_space.sample()
-        obs, reward, done, truncated, info = env.step(action)
+        env = AtariPreprocessing(env, frame_skip=4)
+        # env.reset()
+        # action = env.observation_space.sample()
+        # obs, reward, done, info = env.step(action)
         model = DQN(env)
-        model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
+        model(torch.empty((1, 4, 84, 84), dtype=torch.float32))
+        model(torch.empty((64, 4, 84, 84), dtype=torch.float32)) # test
