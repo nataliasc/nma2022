@@ -8,6 +8,8 @@ from model import DQN
 from replaybuffer import ReplayBuffer
 from utils_saliency import set_device, set_seed
 import random
+import torch
+import numpy as np
 
 
 # set device and random seed
@@ -22,7 +24,7 @@ set_seed(seed=SEED)
 #############################
 NUM_TEST = 10  # number of tests on agent
 MEM_SIZE = int(1e6)
-EPISODES = int(1e5) # total training episodes
+EPISODES = int(5) # total training episodes
 BATCH_SIZE = 64
 
 
@@ -33,11 +35,11 @@ BATCH_SIZE = 64
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
 env = FrameStack(env, 4, new_step_api=True)
-env.reset()
+state = env.reset()
 action = random.randrange(env.action_space.n)
-obs, reward, done, truncated, info = env.step(action)
+next_state, reward, done, truncated, info = env.step(action)
 model = DQN(env).to(DEVICE)
-q = model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
+q = model(torch.Tensor(state).unsqueeze(0)) # input shape is now (1, 84, 84)
 
 print('q values output by model')
 print(q)
@@ -47,8 +49,7 @@ print(q)
 # initialise memory buffer
 #############################
 
-buffer = replaybuffer(env, 1000) # size of 1000 for testing
-buffer.store((state, action, reward, next_state, done))
+buffer = ReplayBuffer(env, 1000) # size of 1000 for testing
 
 #############################
 # testing function
@@ -107,7 +108,7 @@ def test(save=False):
     total_reward /= NUM_TEST
     # unclipped_reward /= NUM_TEST # see note above
     # TODO maybe add plotting function or log to wandb
-    print(f"[TESTING] Total Reward: {total_reward})
+    print(f"[TESTING] Total Reward: {total_reward}")
 
     return total_reward
 
@@ -117,16 +118,18 @@ def test(save=False):
 avg_q = 0
 epsilon = 0.2
 
-for episode in range(EPISODES):
+for episode in range(1):
 
     env.reset()
-    state, _, done, _ = env.step(action)
+    next_state, reward, done, truncated, info = env.step(action)
 
     while not done:
-        q_values = q_func(state.to(DEVICE))
+        q_values = torch.Tensor(np.empty(env.action_space.n))
         if random.random() < epsilon:  # epsilon-random policy
             action = env.action_space.sample()
         else:
-            action = torch.argmax(q_values, dim=1)
+            action = torch.argmax(q_values)
 
         avg_q = 0.9 * avg_q + 0.1 * q_values.mean().item()
+        done = 1
+        print(avg_q)
