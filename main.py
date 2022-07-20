@@ -44,13 +44,6 @@ q = model(torch.Tensor(state).unsqueeze(0)) # input shape is now (1, 84, 84)
 print('q values output by model')
 print(q)
 
-# %%
-#############################
-# initialise memory buffer
-#############################
-
-buffer = ReplayBuffer(env, 1000) # size of 1000 for testing
-
 #############################
 # testing function
 #############################
@@ -113,43 +106,7 @@ def test(save=False):
     return total_reward
 
 #############################
-# training loop: MOVED TO agent.py
+# training
 #############################
-avg_q = 0
-epsilon = 0.2
-q_values = torch.Tensor(np.empty(env.action_space.n))
-
-#every iteration:
-# put a sample in the ReplayBuffer
-# once the buffer has a minimum number of experiences:
-#           start sampling from the buffer
-#   every x epochs:
-#       set the weights of the target model to the weights of the policy model
-
-for episode in range(EPISODES):
-
-    #Fill ReplayBuffer with enough samples
-    while len(buffer) < BATCH_SIZE:
-        #reset the environment
-        state = env.reset()
-        done = 0
-        action = env.action_space.sample()
-        #take an action
-        next_state, reward, done, truncated, info = env.step(action)
-        #add the tuple to the ReplayBuffer
-        sample = (state, action, reward, next_state, done)
-        buffer.store(sample)
-
-    #reset the environment
-    state = env.reset()
-    done = 0
-
-    while not done:
-        if random.random() < epsilon:  # epsilon-random policy
-            action = env.action_space.sample()
-        else:
-            action = torch.argmax(q_values)
-
-        avg_q = 0.9 * avg_q + 0.1 * q_values.mean().item()
-        done = 1
-        print(avg_q)
+agent = Agent(env)
+agent.train(num_episodes=1000) # this is not working yet
