@@ -24,7 +24,7 @@ set_seed(seed=SEED)
 #############################
 NUM_TEST = 10  # number of tests on agent
 MEM_SIZE = int(1e6)
-EPISODES = int(5) # total training episodes
+EPISODES = int(1) # total training episodes
 BATCH_SIZE = 64
 
 
@@ -117,14 +117,21 @@ def test(save=False):
 #############################
 avg_q = 0
 epsilon = 0.2
+q_values = torch.Tensor(np.empty(env.action_space.n))
 
-for episode in range(1):
+# every iteration:
+# put a sample in the ReplayBuffer
+# once the buffer has a minimum number of experiences:
+#           start sampling from the buffer
+#   every x epochs:
+#       set the weights of the target model to the weights of the policy model
+
+for episode in range(EPISODES):
 
     env.reset()
     next_state, reward, done, truncated, info = env.step(action)
 
     while not done:
-        q_values = torch.Tensor(np.empty(env.action_space.n))
         if random.random() < epsilon:  # epsilon-random policy
             action = env.action_space.sample()
         else:
