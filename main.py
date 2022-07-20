@@ -5,7 +5,13 @@ import gym
 from gym.wrappers import AtariPreprocessing, FrameStack
 
 from model import DQN
-from utils_saliency import *
+from replaybuffer import ReplayBuffer
+from utils_saliency import set_device, set_seed
+from agent import Agent
+import random
+import torch
+import numpy as np
+
 
 # set device and random seed
 DEVICE = set_device()
@@ -18,6 +24,9 @@ set_seed(seed=SEED)
 # hyperparameters
 #############################
 NUM_TEST = 10  # number of tests on agent
+MEM_SIZE = int(1e6)
+EPISODES = int(1) # total training episodes
+BATCH_SIZE = 64
 
 
 
@@ -27,21 +36,14 @@ NUM_TEST = 10  # number of tests on agent
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
 env = FrameStack(env, 4, new_step_api=True)
-env.reset()
+state = env.reset()
 action = random.randrange(env.action_space.n)
-obs, reward, done, terminal, info = env.step(action)
+next_state, reward, done, truncated, info = env.step(action)
 model = DQN(env).to(DEVICE)
-q = model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
+q = model(torch.Tensor(state).unsqueeze(0)) # input shape is now (1, 84, 84)
+
 print('q values output by model')
 print(q)
-
-# %%
-#############################
-# initialise memory buffer
-#############################
-
-
-
 
 #############################
 # testing function
@@ -85,7 +87,7 @@ def test(save=False):
                 # plt.savefig(f"frame-{frame}.png")
                 # print("LOST LIFE")
 
-            unclipped_reward += info['unclipped_reward']
+            # unclipped_reward += info['unclipped_reward'] we do not seem to have access to this
             total_reward += reward
             state = next_state
             frame += 1
@@ -98,14 +100,14 @@ def test(save=False):
             save_gif(frames, "{}.gif".format(os.path.join(video_dir, str(scheduler.step_count()))))  # TODO safe_fig created in utils to store frames during
 
     total_reward /= NUM_TEST
-    unclipped_reward /= NUM_TEST
+    # unclipped_reward /= NUM_TEST # see note above
     # TODO maybe add plotting function or log to wandb
-    print(f"[TESTING] Total Reward: {total_reward}, Unclipped Reward: {unclipped_reward}")
+    print(f"[TESTING] Total Reward: {total_reward}")
 
     return total_reward
 
-
-
 #############################
-# training loop
+# training
 #############################
+agent = Agent(env)
+agent.train(num_episodes=1000) # this is not working yet

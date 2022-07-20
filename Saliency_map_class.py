@@ -150,6 +150,6 @@ class Conv_Deconv(nn.Module):
 
 
 # TODO create test_data=tensor.ones(4*84*84)
-create the network
+#create the network
 
 
