@@ -47,12 +47,20 @@ class Agent():
             self.epsilon = 0.2 # here we can decay epsilon
             while not done:
 
-                action = self.env.action_space.sample()
                 # take an action
+                q_values = self.Q(state)
+
+                if random.random() < epsilon:  # epsilon-random policy
+                    action = self.env.action_space.sample()
+                else:
+                    action = torch.argmax(q_values)
+
                 next_state, reward, done, truncated, info = self.env.step(action)
                 # add the tuple to the ReplayBuffer
                 sample = (state, action, reward, next_state, done)
                 self.buffer.store(sample)
+                state = next_state
+
                 if self.buffer.full:
                     continue
 
