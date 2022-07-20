@@ -8,6 +8,7 @@ import random
 import torch
 import numpy as np
 
+
 class Agent():
     def __init__(self,
                  env,
@@ -20,7 +21,8 @@ class Agent():
         self.env = env
         self.Q_target = DQN(env, learning_rate)
         self.Q = DQN(env, learning_rate)
-        self.Q_target.load_state_dict(self.Q.state_dict()) # set the weights of the target network to those of the policy network
+        self.Q_target.load_state_dict(
+            self.Q.state_dict())  # set the weights of the target network to those of the policy network
         self.action_space = env.action_space.n
         self.buffer = ReplayBuffer(env, buffer_size, batch_size=batch_size)
         self.gamma = gamma
@@ -37,7 +39,7 @@ class Agent():
         epsilon = 0.2
         q_values = torch.Tensor(np.empty(self.env.action_space.n))
 
-        #every iteration:
+        # every iteration:
         # put a sample in the ReplayBuffer
         # once the buffer has a minimum number of experiences:
         #           start sampling from the buffer
@@ -46,20 +48,20 @@ class Agent():
 
         for episode in range(num_episodes):
 
-            #Fill ReplayBuffer with enough samples
+            # Fill ReplayBuffer with enough samples
             for i in range(self.batch_size):
-            #while len(self.buffer) < self.batch_size:
-                #reset the environment
+                # while len(self.buffer) < self.batch_size:
+                # reset the environment
                 state = self.env.reset()
                 done = 0
                 action = self.env.action_space.sample()
-                #take an action
+                # take an action
                 next_state, reward, done, truncated, info = self.env.step(action)
-                #add the tuple to the ReplayBuffer
+                # add the tuple to the ReplayBuffer
                 sample = (state, action, reward, next_state, done)
                 self.buffer.store(sample)
 
-            #reset the environment
+            # reset the environment
             state = self.env.reset()
             done = 0
 
@@ -73,8 +75,11 @@ class Agent():
                 done = 1
                 print(avg_q)
 
+
+# EpsilonScheduler is a linear scheduler for the annealed learning rate for the DQN.
 class EpsilonScheduler():
 
+    # schedule is a list of tuples of the form (step, epsilon)
     def __init__(self, schedule):
         self.steps = 0
         self.schedule = sorted(schedule, key=lambda x: x[0])
@@ -82,15 +87,13 @@ class EpsilonScheduler():
         if len(self.schedule) < 1 or self.schedule[0][0] != 0:
             raise ValueError("schedule must have length > 0 and must begin with an initial setting")
 
-
     def step(self, n):
         self.steps += n
-
 
     def step_count(self):
         return self.steps
 
-
+    # Epsilon starts at initial value and degrades to lowe_bound over max_steps.
     def epsilon(self):
         for i, (next_step, next_epsilon) in enumerate(self.schedule):
             if next_step > self.steps:
