@@ -72,3 +72,28 @@ class Agent():
                 done = 1
                 print(avg_q)
 
+class EpsilonScheduler():
+
+    def __init__(self, schedule):
+        self.steps = 0
+        self.schedule = sorted(schedule, key=lambda x: x[0])
+
+        if len(self.schedule) < 1 or self.schedule[0][0] != 0:
+            raise ValueError("schedule must have length > 0 and must begin with an initial setting")
+
+
+    def step(self, n):
+        self.steps += n
+
+
+    def step_count(self):
+        return self.steps
+
+
+    def epsilon(self):
+        for i, (next_step, next_epsilon) in enumerate(self.schedule):
+            if next_step > self.steps:
+                prior = self.schedule[i - 1]
+                progress = (self.steps - prior[0]) / (next_step - prior[0])
+                return progress * next_epsilon + (1 - progress) * prior[1]
+        return self.schedule[-1][1]
