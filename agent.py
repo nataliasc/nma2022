@@ -48,9 +48,9 @@ class Agent():
             while not done:
 
                 # take an action
-                q_values = self.Q(state)
+                q_values = self.Q(torch.Tensor(state))
 
-                if random.random() < epsilon:  # epsilon-random policy
+                if random.random() < self.epsilon:  # epsilon-random policy
                     action = self.env.action_space.sample()
                 else:
                     action = torch.argmax(q_values)
@@ -68,13 +68,13 @@ class Agent():
                 Q_target = self.Q_target(next_state)
                 Q_max = torch.max(Q_target)
                 y = reward + (1 - done) * self.gamma * Q_max
-                x = self.Q(state)[range(BATCH_SIZE), action.squeeze()]
+                x = self.Q(state)[range(self.batch_size), action.squeeze()]
                 loss = self.loss(x, y.squeeze())
 
                 # backprop
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
 
                 # https://discuss.pytorch.org/t/copying-weights-from-one-net-to-another/1492/17
                 # polyak averaging
