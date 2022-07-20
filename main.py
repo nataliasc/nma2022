@@ -113,13 +113,13 @@ def test(save=False):
     return total_reward
 
 #############################
-# training loop
+# training loop: MOVED TO agent.py
 #############################
 avg_q = 0
 epsilon = 0.2
 q_values = torch.Tensor(np.empty(env.action_space.n))
 
-# every iteration:
+#every iteration:
 # put a sample in the ReplayBuffer
 # once the buffer has a minimum number of experiences:
 #           start sampling from the buffer
@@ -128,8 +128,21 @@ q_values = torch.Tensor(np.empty(env.action_space.n))
 
 for episode in range(EPISODES):
 
-    env.reset()
-    next_state, reward, done, truncated, info = env.step(action)
+    #Fill ReplayBuffer with enough samples
+    while len(buffer) < BATCH_SIZE:
+        #reset the environment
+        state = env.reset()
+        done = 0
+        action = env.action_space.sample()
+        #take an action
+        next_state, reward, done, truncated, info = env.step(action)
+        #add the tuple to the ReplayBuffer
+        sample = (state, action, reward, next_state, done)
+        buffer.store(sample)
+
+    #reset the environment
+    state = env.reset()
+    done = 0
 
     while not done:
         if random.random() < epsilon:  # epsilon-random policy
