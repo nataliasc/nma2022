@@ -86,8 +86,9 @@ class Agent():
 
 if __name__ == '__main__':
         import gym
-        from gym.wrappers import AtariPreprocessing
+        from gym.wrappers import AtariPreprocessing, FrameStack
         env = gym.make("ALE/Breakout-v5", frameskip=1)
-        env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
+        env = AtariPreprocessing(env, frame_skip=4)
+        env = FrameStack(env, 4)
         agent = Agent(env)
         agent.train(5)
