@@ -5,8 +5,10 @@ import gym
 from gym.wrappers import AtariPreprocessing, FrameStack
 
 from model import DQN
-from utils_saliency import *
+from replaybuffer import ReplayBuffer
+from utils_saliency import set_device, set_seed
 import random
+
 
 # set device and random seed
 DEVICE = set_device()
@@ -33,7 +35,7 @@ env = AtariPreprocessing(env, frame_skip=4, new_step_api=True)
 env = FrameStack(env, 4, new_step_api=True)
 env.reset()
 action = random.randrange(env.action_space.n)
-obs, reward, done, terminal, info = env.step(action)
+obs, reward, done, truncated, info = env.step(action)
 model = DQN(env).to(DEVICE)
 q = model(torch.Tensor(obs).unsqueeze(0)) # input shape is now (1, 84, 84)
 
@@ -45,8 +47,8 @@ print(q)
 # initialise memory buffer
 #############################
 
-
-
+buffer = replaybuffer(env, 1000) # size of 1000 for testing
+buffer.store((state, action, reward, next_state, done))
 
 #############################
 # testing function
@@ -90,7 +92,7 @@ def test(save=False):
                 # plt.savefig(f"frame-{frame}.png")
                 # print("LOST LIFE")
 
-            unclipped_reward += info['unclipped_reward']
+            # unclipped_reward += info['unclipped_reward'] we do not seem to have access to this
             total_reward += reward
             state = next_state
             frame += 1
@@ -103,33 +105,28 @@ def test(save=False):
             save_gif(frames, "{}.gif".format(os.path.join(video_dir, str(scheduler.step_count()))))  # TODO safe_fig created in utils to store frames during
 
     total_reward /= NUM_TEST
-    unclipped_reward /= NUM_TEST
+    # unclipped_reward /= NUM_TEST # see note above
     # TODO maybe add plotting function or log to wandb
-    print(f"[TESTING] Total Reward: {total_reward}, Unclipped Reward: {unclipped_reward}")
+    print(f"[TESTING] Total Reward: {total_reward})
 
     return total_reward
-
-
-q_func = DQN(env).to(DEVICE)
 
 #############################
 # training loop
 #############################
-avg_q =0
+avg_q = 0
+epsilon = 0.2
 
 for episode in range(EPISODES):
 
     env.reset()
-    state, _, done, _=env.step(action)
+    state, _, done, _ = env.step(action)
 
     while not done:
         q_values = q_func(state.to(DEVICE))
-        if np.random.random() > scheduler.epsilon():  # epsilon-random policy
-            action = torch.argmax(q_values, dim=1)
-        else:
+        if random.random() < epsilon:  # epsilon-random policy
             action = env.action_space.sample()
+        else:
+            action = torch.argmax(q_values, dim=1)
 
         avg_q = 0.9 * avg_q + 0.1 * q_values.mean().item()
-
-        lives= not env.lives()
-
