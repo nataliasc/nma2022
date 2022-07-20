@@ -55,7 +55,7 @@ class Agent():
                 else:
                     action = torch.argmax(q_values)
 
-                next_state, reward, done, truncated, info = self.env.step(action)
+                next_state, reward, done, info = self.env.step(action)
                 # add the tuple to the ReplayBuffer
                 sample = (state, action, reward, next_state, done)
                 self.buffer.store(sample)
