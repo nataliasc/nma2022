@@ -21,7 +21,6 @@ metadata = pd.read_csv(r'raw_data/meta_data.csv')
 metadata_game = metadata[metadata['GameName'] == 'breakout']
 print(metadata_game.head())
 
-# %%
 # get ordered game frames and corresponding gaze data from data files
 # frames resized to 84*84
 trial_ids = metadata_game['trial_id'].to_numpy()
@@ -53,8 +52,6 @@ for trial in trial_ids:
     print('%i gaze positions are out of frame' % n_out_of_fr)
     print('%i frames have no gaze position data' % n_frame_no_gaze)
 
-
-    # %%
     ################################
     # sample from frames to create (4 frame episodes, combined saliency density map)
     ################################
@@ -64,7 +61,7 @@ for trial in trial_ids:
     n_samples = 2  # number of episodes taken from each trial
 
     for times in range(n_samples):
-        start_idx = np.random.randint(0, len(all_grey_frames)-n_skips*n_frames_per_episode)
+        start_idx = np.random.randint(0, len(all_grey_frames) - n_skips * n_frames_per_episode)
         episode = get_episode(start_idx, n_skips, n_frames_per_episode, gaze_data, all_grey_frames)
         saliency_density = create_saliency_density(start_idx, n_skips, n_frames_per_episode, [84, 84], gaze_maps)
 
@@ -78,7 +75,3 @@ y = torch.tensor(target_saliency_maps)
 dataset = data.TensorDataset(X, y)
 
 print(X.shape, y.shape)
-
-
-
-
