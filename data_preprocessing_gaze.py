@@ -1,7 +1,7 @@
 """
 this file preprocesses raw data from atari gaze dataset to training data for saliency prediction
 
-input: frames and gaze positions for subjects
+input: frames and gaze positions for each trial of subject
 output: n_samples*(4_frame_episodes, 1_saliency_density_map)
 
 """
