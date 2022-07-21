@@ -43,10 +43,11 @@ class Agent():
         pass
 
     def train(self, num_episodes):
-        state = self.env.reset()
+
         avg_reward = 0
         for episode in range(num_episodes):
 
+            state = self.env.reset()
             total_reward = 0
             done = False
             self.epsilon = max(self.epsilon * self.epsilon_decay, self.min_epsilon)
@@ -67,10 +68,11 @@ class Agent():
                 state = next_state
                 total_reward += reward
 
-                if self.buffer.full: # problem here
-                    continue
                 print(len(self.buffer))
                 print(self.buffer.max_size)
+
+                if not self.buffer.full:
+                    continue
 
                 state, action, reward, next_state, done = self.buffer.sample()
                 Q_target = self.Q_target(next_state)
@@ -99,6 +101,6 @@ if __name__ == '__main__':
         env = gym.make("ALE/Breakout-v5", frameskip=1)
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
-        agent = Agent(env)
-        agent.train(500)
+        agent = Agent(env, buffer_size=1000)
+        agent.train(100)
         print(len(agent.buffer))
