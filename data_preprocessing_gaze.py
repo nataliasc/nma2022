@@ -27,7 +27,7 @@ trial_ids = metadata_game['trial_id'].to_numpy()
 # hyperparameters controlling sampling
 n_skips = 4
 n_frames_per_episode = 4
-n_samples = 1  # number of episodes taken from each trial
+n_samples = 2000  # number of episodes taken from each trial
 # list containing all data points
 episode_samples = []
 target_saliency_maps = []
@@ -70,6 +70,7 @@ for trial in trial_ids:
 # create tensor datasets
 X = torch.tensor(episode_samples)
 y = torch.tensor(target_saliency_maps)
+print(f'n samples in dataset {len(X)}')
 
 dataset = data.TensorDataset(X, y)
 
