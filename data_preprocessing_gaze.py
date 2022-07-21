@@ -24,6 +24,10 @@ print(metadata_game.head())
 # get ordered game frames and corresponding gaze data from data files
 # frames resized to 84*84
 trial_ids = metadata_game['trial_id'].to_numpy()
+# hyperparameters controlling sampling
+n_skips = 4
+n_frames_per_episode = 4
+n_samples = 2  # number of episodes taken from each trial
 # list containing all data points
 episode_samples = []
 target_saliency_maps = []
@@ -55,11 +59,6 @@ for trial in trial_ids:
     ################################
     # sample from frames to create (4 frame episodes, combined saliency density map)
     ################################
-    # hyperparameters controlling sampling
-    n_skips = 4
-    n_frames_per_episode = 4
-    n_samples = 2  # number of episodes taken from each trial
-
     for times in range(n_samples):
         start_idx = np.random.randint(0, len(all_grey_frames) - n_skips * n_frames_per_episode)
         episode = get_episode(start_idx, n_skips, n_frames_per_episode, gaze_data, all_grey_frames)
