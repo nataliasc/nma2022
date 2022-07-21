@@ -15,7 +15,7 @@ wandb.init(project="test-project", entity="nma2022")
 
 #log hyperparameters
 wandb.config = {
-  "num_episodes": 500,
+  "num_episodes": 50000,
   "learning_rate": 0.00001,
   "batch_size": 64, 
   "gamma": 0.99,
@@ -24,14 +24,14 @@ wandb.config = {
   "min_epsilon": 0.01,
   "epsilon_decay": 0.99,
   "buffer_size": 100000,
-  "watch()": "agent.Q_target"
+  "watch()": "agent.Q"
 }
 
 class Agent():
     def __init__(self,
                  env,
                  gamma=0.99,
-                 tau=0.5,
+                 tau=0.001,
                  epsilon=0.9,
                  min_epsilon=0.01,
                  epsilon_decay=0.99,
