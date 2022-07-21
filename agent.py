@@ -16,6 +16,8 @@ class Agent():
                  gamma=0.99,
                  tau=1e-3,
                  epsilon=0.2,
+                 min_epsilon=0.01,
+                 epsilon_decay=0.99,
                  buffer_size=1000,
                  learning_rate=1e-6,
                  batch_size=64):
@@ -28,6 +30,8 @@ class Agent():
         self.buffer = ReplayBuffer(env, buffer_size, batch_size=batch_size)
         self.gamma = gamma
         self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.min_epsilon = min_epsilon
         self.tau = tau
         self.learning_rate = learning_rate
         self.batch_size = batch_size
@@ -44,11 +48,11 @@ class Agent():
         for episode in range(num_episodes):
 
             done = False
-            self.epsilon = 0.2 # here we can decay epsilon
+            self.epsilon = max(self.epsilon * self.epsilon_decay, self.min_epsilon)
             while not done:
 
                 # take an action
-                q_values = self.Q(torch.Tensor(state))
+                q_values = self.Q(torch.Tensor(state).unsqueeze(0))
 
                 if random.random() < self.epsilon:  # epsilon-random policy
                     action = self.env.action_space.sample()
