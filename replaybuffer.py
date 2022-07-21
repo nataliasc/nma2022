@@ -1,5 +1,6 @@
 import numpy as np
 import gym
+import torch
 
 class ReplayBuffer():
     def __init__(self, env, size, batch_size=64):
@@ -43,7 +44,7 @@ class ReplayBuffer():
         next_state = self.next_states[idxs, ...]
         done = self.done[idxs, ...]
 
-        return state, action, reward, next_state, done
+        return torch.Tensor(state), torch.Tensor(action), torch.Tensor(reward), torch.Tensor(next_state), torch.Tensor(done)
 
     def __len__(self):
         return self.size

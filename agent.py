@@ -76,6 +76,7 @@ class Agent():
 
                 state, action, reward, next_state, done = self.buffer.sample()
                 Q_target = self.Q_target(next_state)
+                # Q_target = self.Q_target(torch.empty(64, 4, 84, 84))
                 Q_max = torch.max(Q_target)
                 y = reward + (1 - done) * self.gamma * Q_max
                 x = self.Q(state)[range(self.batch_size), action.squeeze()]
@@ -101,6 +102,5 @@ if __name__ == '__main__':
         env = gym.make("ALE/Breakout-v5", frameskip=1)
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
-        agent = Agent(env, buffer_size=1000)
-        agent.train(100)
-        print(len(agent.buffer))
+        agent = Agent(env, buffer_size=100)
+        agent.train(5)
