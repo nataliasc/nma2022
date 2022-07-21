@@ -45,6 +45,7 @@ class Agent():
     def train(self, num_episodes):
 
         avg_reward = 0
+        losses = []
         for episode in range(num_episodes):
 
             state = self.env.reset()
@@ -74,10 +75,12 @@ class Agent():
                 print("Sampling from the buffer")
                 states, actions, rewards, next_states, t = self.buffer.sample()
                 actions = actions.long()
-                Q_target = self.Q_target(next_states)
-                # Q_target = self.Q_target(torch.empty(64, 4, 84, 84))
-                Q_max = torch.max(Q_target)
-                y = rewards + (1 - t) * self.gamma * Q_max
+
+                with torch.no_grad():
+                    Q_target = self.Q_target(next_states)
+                    Q_max = torch.max(Q_target)
+                    y = rewards + (1 - t) * self.gamma * Q_max
+
                 x = self.Q(states)[range(self.batch_size), actions.squeeze()]
                 loss = self.loss(x, y.squeeze())
 
@@ -93,15 +96,19 @@ class Agent():
 
                 self.optimizer.step()
                 print(f"Episode {episode}: loss {loss.item()}")
+                losses.append(loss.item())
 
             avg_reward = 0.9 * avg_reward + 0.1 * total_reward
             print(f"Episode {episode}: reward {total_reward}")
+        plt.plot(losses)
+        plt.show()
 
 if __name__ == '__main__':
         import gym
         from gym.wrappers import AtariPreprocessing, FrameStack
+        import matplotlib.pyplot as plt
         env = gym.make("ALE/Breakout-v5", frameskip=1)
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
-        agent = Agent(env, buffer_size=1000)
-        agent.train(100)
+        agent = Agent(env, buffer_size=100)
+        agent.train(30)

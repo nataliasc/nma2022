@@ -27,8 +27,6 @@ class ReplayBuffer():
         self.size += 1
         self.size = min(self.size, self.max_size)
 
-        return self
-
     def full(self):
         return self.max_size == self.size
 
