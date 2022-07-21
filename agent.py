@@ -71,6 +71,7 @@ class Agent():
                 if not self.buffer.full():
                     continue
 
+                print("Sampling from the buffer")
                 states, actions, rewards, next_states, t = self.buffer.sample()
                 actions = actions.long()
                 Q_target = self.Q_target(next_states)
@@ -89,11 +90,12 @@ class Agent():
 
                 for target_param, param in zip(self.Q_target.parameters(), self.Q.parameters()):
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
-                    
+
                 self.optimizer.step()
+                print(f"Episode {episode}: loss {loss.item()}")
 
             avg_reward = 0.9 * avg_reward + 0.1 * total_reward
-            print(avg_reward)
+            print(f"Episode {episode}: reward {total_reward}")
 
 if __name__ == '__main__':
         import gym
@@ -101,5 +103,5 @@ if __name__ == '__main__':
         env = gym.make("ALE/Breakout-v5", frameskip=1)
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
-        agent = Agent(env, buffer_size=100)
-        agent.train(5)
+        agent = Agent(env, buffer_size=1000)
+        agent.train(100)
