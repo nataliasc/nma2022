@@ -18,7 +18,7 @@ class Agent():
                  epsilon=0.2,
                  min_epsilon=0.01,
                  epsilon_decay=0.99,
-                 buffer_size=1000,
+                 buffer_size=100000,
                  learning_rate=1e-6,
                  batch_size=64):
         self.env = env
@@ -44,9 +44,10 @@ class Agent():
 
     def train(self, num_episodes):
         state = self.env.reset()
-
+        avg_reward = 0
         for episode in range(num_episodes):
 
+            total_reward = 0
             done = False
             self.epsilon = max(self.epsilon * self.epsilon_decay, self.min_epsilon)
             while not done:
@@ -64,9 +65,12 @@ class Agent():
                 sample = (state, action, reward, next_state, done)
                 self.buffer.store(sample)
                 state = next_state
+                total_reward += reward
 
-                if self.buffer.full:
+                if self.buffer.full: # problem here
                     continue
+                print(len(self.buffer))
+                print(self.buffer.max_size)
 
                 state, action, reward, next_state, done = self.buffer.sample()
                 Q_target = self.Q_target(next_state)
@@ -86,7 +90,8 @@ class Agent():
                 for target_param, param in zip(Q_target.parameters(), Q.parameters()):
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
 
-                # need to add a way of keeping track of rewards
+            avg_reward = 0.9 * avg_reward + 0.1 * total_reward
+            print(avg_reward)
 
 if __name__ == '__main__':
         import gym
@@ -95,4 +100,5 @@ if __name__ == '__main__':
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
         agent = Agent(env)
-        agent.train(5)
+        agent.train(500)
+        print(len(agent.buffer))
