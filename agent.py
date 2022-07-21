@@ -74,11 +74,12 @@ class Agent():
                 if not self.buffer.full():
                     continue
 
-                state, action, reward, next_state, done = self.buffer.sample()
+                state, action, reward, next_state, t = self.buffer.sample()
+                action = action.long()
                 Q_target = self.Q_target(next_state)
                 # Q_target = self.Q_target(torch.empty(64, 4, 84, 84))
                 Q_max = torch.max(Q_target)
-                y = reward + (1 - done) * self.gamma * Q_max
+                y = reward + (1 - t) * self.gamma * Q_max
                 x = self.Q(state)[range(self.batch_size), action.squeeze()]
                 loss = self.loss(x, y.squeeze())
 
@@ -90,7 +91,7 @@ class Agent():
                 # https://discuss.pytorch.org/t/copying-weights-from-one-net-to-another/1492/17
                 # polyak averaging
 
-                for target_param, param in zip(Q_target.parameters(), Q.parameters()):
+                for target_param, param in zip(self.Q_target.parameters(), self.Q.parameters()):
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
 
             avg_reward = 0.9 * avg_reward + 0.1 * total_reward
