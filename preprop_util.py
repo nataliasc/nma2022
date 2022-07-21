@@ -7,9 +7,13 @@ from glob import glob
 import os
 import cv2
 import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter
+from scipy.special import softmax
 
 
 # load frame dir and gaze txt for subject
+
+
 def read_txt_data(txt_path, time_frame):
     '''
     read data from txt file containing gaze pos
@@ -115,7 +119,7 @@ def gaze_str_to_pos(gaze_pos):
             continue
         elif gaze_pos[idx] != -1:
             x = round(float(gaze_pos[idx]))
-            y = round(float(gaze_pos[idx+1]))
+            y = round(float(gaze_pos[idx + 1]))
             gaze_positions.append([x, y])
 
     return gaze_positions
@@ -163,9 +167,9 @@ def get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames):
     # check whether they are from the same game
     if gaze_data_list[start_index][1] != 'null':  # check episode_id field, if not null there are multiple episodes
         # get episode id from all sampled frames
-        last_epi_id = gaze_data[sampled_idx[0]][1]
+        last_epi_id = gaze_data_list[sampled_idx[0]][1]
         for fr in range(1, num_frames):
-            current_epi_id = gaze_data[sampled_idx[fr]][1]
+            current_epi_id = gaze_data_list[sampled_idx[fr]][1]
             if last_epi_id != current_epi_id:
                 episode_ = get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames)
             else:
@@ -174,3 +178,29 @@ def get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames):
         episode_ = all_frames[sampled_idx]
 
     return episode_
+
+
+def create_saliency_density(start_index, skips, num_frames, density_map_dim, all_gaze_maps):
+    """
+    compile the saliency density for corresponding episodes
+    :param start_index: index where episode starts
+    :param skips: num of skip frames
+    :param num_frames: total num of frames in episode
+    :param density_map_dim: the dimensions of desirable density map, for resizing
+    :param all_gaze_maps: nd array containing all processed gaze maps
+    :return: one saliency density map
+    """
+    saliency_density_map = np.zeros(all_gaze_maps[0].shape)
+    map_count = skips * num_frames  # total number of gaze position maps to be combined
+    # compile all included gaze position maps
+    for m in range(map_count):
+        saliency_density_map += all_gaze_maps[start_index + m]
+
+    # resize
+    saliency_density_map = cv2.resize(saliency_density_map, (84, 84))
+    # gaussian smoothing
+    saliency_density_map = gaussian_filter(saliency_density_map, sigma=5)
+    # softmax
+    saliency_density_map = softmax(saliency_density_map)
+
+    return saliency_density_map
