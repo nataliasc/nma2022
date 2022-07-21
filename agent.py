@@ -71,7 +71,7 @@ class Agent():
                 print(len(self.buffer))
                 print(self.buffer.max_size)
 
-                if not self.buffer.full:
+                if not self.buffer.full():
                     continue
 
                 state, action, reward, next_state, done = self.buffer.sample()
