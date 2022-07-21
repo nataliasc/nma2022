@@ -89,7 +89,7 @@ def gaze_str_to_intlist(gaze_pos):
     '''
     convert strings of gaze position read from txt file to list containing lists of gaze pos in format [int, int]
     :param gaze_pos: list of strings of 'num.num'
-    :return: one list of [int, int] of gaze position
+    :return: one np array of [int, int] of gaze position
     '''
     for i in range(len(gaze_pos)):
         if gaze_pos[i] == 'null\n':  # if no gaze pos is available
@@ -100,3 +100,77 @@ def gaze_str_to_intlist(gaze_pos):
             gaze_pos[i] = pos
 
     return gaze_pos
+
+
+def gaze_str_to_pos(gaze_pos):
+    """
+    try treating odd idx values as x position and even idx values as y position
+    :param gaze_pos:
+    :return:
+    """
+    gaze_positions = []
+    x_pos_indices = np.arange(0, len(gaze_pos), step=2)
+    for idx in x_pos_indices:
+        if gaze_pos[idx] == 'null\n':  # if no gaze pos is available
+            continue
+        elif gaze_pos[idx] != -1:
+            x = round(float(gaze_pos[idx]))
+            y = round(float(gaze_pos[idx+1]))
+            gaze_positions.append([x, y])
+
+    return gaze_positions
+
+
+# from positions to gaze maps
+def gaze_pos_to_map(coor):
+    """
+    convert gaze position to gaze map for each frame (50ms)
+    :param coor: np.array of coordinate of gaze pos
+    :return: resized gaze map (84*84), num of out of screen position counts
+    """
+    map_ = np.zeros((210, 160))  # initalise map to original frame size
+    out_of_fr_count = 0
+    if coor[0] != 'null\n':  # if no gaze pos is available
+        for i in range(len(coor)):
+            if coor[i] != -1:
+                x, y = coor[i]  # x is horizontal position, y is vertical position
+                if x > 159 or y > 209:  # ignore out of screen coordinates
+                    # print(coor[i])
+                    out_of_fr_count += 1
+                    continue
+                map_[y, x] = 1
+
+    # resized_gaze_map = cv2.resize(map, (84, 84))
+
+    return map_, out_of_fr_count
+
+
+def get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames):
+    """
+    sample 4 frame episodes from all frames
+    :param all_frames: nd array containing all preprocessed frames
+    :param start_index: the starting frame of sampled episode
+    :param skip_fr: interval at which frames are sampled
+    :param num_frames: total num of frames per episode
+    :param gaze_data_list: list containing gaze data info per frame, used to check whether frames are from same game
+    :return: nd array of episode, num_frames*fr_h*fr_w
+    """
+    # get indices of sampled frames
+    sampled_idx = np.arange(start_index, start_index + skip_fr * num_frames, skip_fr)
+    assert len(sampled_idx) == num_frames
+    episode_ = np.zeros((num_frames, all_frames[0].shape[0], all_frames[0].shape[1]))
+
+    # check whether they are from the same game
+    if gaze_data_list[start_index][1] != 'null':  # check episode_id field, if not null there are multiple episodes
+        # get episode id from all sampled frames
+        last_epi_id = gaze_data[sampled_idx[0]][1]
+        for fr in range(1, num_frames):
+            current_epi_id = gaze_data[sampled_idx[fr]][1]
+            if last_epi_id != current_epi_id:
+                episode_ = get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames)
+            else:
+                episode_ = all_frames[sampled_idx]
+    else:
+        episode_ = all_frames[sampled_idx]
+
+    return episode_

@@ -3,6 +3,7 @@ This file contains the code for saliency prediction algorithm.
 Creator: Lucy, Kaitlyn, Maria, Linas
 """
 import matplotlib.pyplot as plt
+import torch
 import torch.nn.functional as F
 # tqdm is a library for smart loops in ML used by neuromatch tutors
 import tqdm
