@@ -16,14 +16,15 @@ wandb.init(project="test-project", entity="nma2022")
 #log hyperparameters
 wandb.config = {
   "num_episodes": 500,
-  "learning_rate": 0.000001,
-  "batch_size": 64,
+  "learning_rate": 0.00001,
+  "batch_size": 64, 
   "gamma": 0.99,
   "tau": 0.001,
   "epsilon": 0.9,
   "min_epsilon": 0.01,
   "epsilon_decay": 0.99,
-  "buffer_size": 10000,
+  "buffer_size": 100000,
+  "watch()": "agent.Q_target"
 }
 
 class Agent():
@@ -34,8 +35,8 @@ class Agent():
                  epsilon=0.9,
                  min_epsilon=0.01,
                  epsilon_decay=0.99,
-                 buffer_size=10000,
-                 learning_rate=1e-6,
+                 buffer_size=100000,
+                 learning_rate=1e-5,
                  batch_size=64):
 
         self.env = env
@@ -63,6 +64,7 @@ class Agent():
 
         #episode = epoch
         #the agent die multiple times within an episode
+
         for episode in range(num_episodes):
 
             total_actions = 0
@@ -82,12 +84,15 @@ class Agent():
                 else:
                     action = torch.argmax(q_values)
 
+                #store how many lives the agent has left
+                lives = self.env.ale.lives()
+                
                 next_state, reward, done, info = self.env.step(action)
 
                 total_actions += 1
-
+                
                 # add the tuple to the ReplayBuffer
-                sample = (state, action, reward, next_state, done)
+                sample = (state, action, reward, next_state, done or (self.env.ale.lives() != lives))
                 self.buffer.store(sample)
 
                 state = next_state
@@ -130,16 +135,16 @@ class Agent():
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
 
                 self.optimizer.step()
-                print(f"Episode {episode}: loss {loss.item()}")
+                #print(f"Episode {episode}: loss {loss.item()}")
                 losses.append(loss.item())
 
             print(f"Episode {episode}: total actions {total_actions} episode reward {episode_reward}")
 
             #at the end of the episide, log the total reward
-            wandb.log({"episode_reward": episode_reward, "episode": episode})
+            wandb.log({"episode_reward": episode_reward, "episode": episode, "total_episode_actions": total_actions})
 
-        plt.plot(losses)
-        plt.show()
+        #plt.plot(losses)
+        #plt.show()
 
     def test(self):
 
@@ -171,4 +176,8 @@ if __name__ == '__main__':
         #W&B: watch the model
         wandb.watch(agent.Q)
         #wandb.watch(agent.Q_target)
-        agent.train(500)
+        agent.train(50000)
+        
+        #save the model weights
+        torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
+        torch.save(agent.Q_target.state_dict(), 'model_weights_Q_target.pth')
