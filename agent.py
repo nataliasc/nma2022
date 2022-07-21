@@ -16,7 +16,9 @@ class Agent():
                  gamma=0.99,
                  tau=1e-3,
                  epsilon=0.2,
-                 buffer_size=1000,
+                 min_epsilon=0.01,
+                 epsilon_decay=0.99,
+                 buffer_size=100000,
                  learning_rate=1e-6,
                  batch_size=64):
         self.env = env
@@ -28,6 +30,8 @@ class Agent():
         self.buffer = ReplayBuffer(env, buffer_size, batch_size=batch_size)
         self.gamma = gamma
         self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.min_epsilon = min_epsilon
         self.tau = tau
         self.learning_rate = learning_rate
         self.batch_size = batch_size
@@ -39,16 +43,19 @@ class Agent():
         pass
 
     def train(self, num_episodes):
-        state = self.env.reset()
 
+        avg_reward = 0
+        losses = []
         for episode in range(num_episodes):
 
+            state = self.env.reset()
+            total_reward = 0
             done = False
-            self.epsilon = 0.2 # here we can decay epsilon
+            self.epsilon = max(self.epsilon * self.epsilon_decay, self.min_epsilon)
             while not done:
 
                 # take an action
-                q_values = self.Q(torch.Tensor(state))
+                q_values = self.Q(torch.Tensor(state).unsqueeze(0))
 
                 if random.random() < self.epsilon:  # epsilon-random policy
                     action = self.env.action_space.sample()
@@ -60,35 +67,48 @@ class Agent():
                 sample = (state, action, reward, next_state, done)
                 self.buffer.store(sample)
                 state = next_state
+                total_reward += reward
 
-                if self.buffer.full:
+                if not self.buffer.full():
                     continue
 
-                state, action, reward, next_state, done = self.buffer.sample()
-                Q_target = self.Q_target(next_state)
-                Q_max = torch.max(Q_target)
-                y = reward + (1 - done) * self.gamma * Q_max
-                x = self.Q(state)[range(self.batch_size), action.squeeze()]
+                print("Sampling from the buffer")
+                states, actions, rewards, next_states, t = self.buffer.sample()
+                actions = actions.long()
+
+                with torch.no_grad():
+                    Q_target = self.Q_target(next_states)
+                    Q_max = torch.max(Q_target)
+                    y = rewards + (1 - t) * self.gamma * Q_max
+
+                x = self.Q(states)[range(self.batch_size), actions.squeeze()]
                 loss = self.loss(x, y.squeeze())
 
                 # backprop
                 self.optimizer.zero_grad()
                 loss.backward()
-                self.optimizer.step()
 
                 # https://discuss.pytorch.org/t/copying-weights-from-one-net-to-another/1492/17
                 # polyak averaging
 
-                for target_param, param in zip(Q_target.parameters(), Q.parameters()):
+                for target_param, param in zip(self.Q_target.parameters(), self.Q.parameters()):
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
 
-                # need to add a way of keeping track of rewards
+                self.optimizer.step()
+                print(f"Episode {episode}: loss {loss.item()}")
+                losses.append(loss.item())
+
+            avg_reward = 0.9 * avg_reward + 0.1 * total_reward
+            print(f"Episode {episode}: reward {total_reward}")
+        plt.plot(losses)
+        plt.show()
 
 if __name__ == '__main__':
         import gym
         from gym.wrappers import AtariPreprocessing, FrameStack
+        import matplotlib.pyplot as plt
         env = gym.make("ALE/Breakout-v5", frameskip=1)
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
-        agent = Agent(env)
-        agent.train(5)
+        agent = Agent(env, buffer_size=100)
+        agent.train(30)
