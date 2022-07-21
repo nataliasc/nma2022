@@ -62,12 +62,15 @@ def load_frames_gazetxt(trial_id, metadataframe, data_path='raw_data/breakout/')
 
     trial_subject_key = str(trial_id) + '_' + metadataframe[metadataframe['trial_id'] == trial_id]['subject_id'].item()
     trial_dir = glob(os.path.join(data_path, trial_subject_key + '*'))  # contain txt file and dir for frames
+    # get which path in trial dir is txt or folder
+    txt_file = 0 if 'txt' in trial_dir[0] else 1
+    folder = 1 - txt_file
     # read data from txt file
-    gaze_data = read_txt_data(trial_dir[0], 50)
+    gaze_data = read_txt_data(trial_dir[txt_file], 50)
     # load frames from frame fir
     frames_grey = []
     num = []
-    frame_glob = glob(os.path.join(trial_dir[1] + '/', '*.png'))
+    frame_glob = glob(os.path.join(trial_dir[folder] + '/', '*.png'))
 
     for path in frame_glob:
         grey = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
