@@ -12,14 +12,15 @@ import numpy as np
 #WEIGHTS AND BIASES. NOTE: need to pip install wandb, then log in
 import wandb
 wandb.init(project="test-project", entity="nma2022")
+
 #log hyperparameters
 wandb.config = {
-  "num_episodes": 10,
+  "num_episodes": 500,
   "learning_rate": 0.000001,
   "batch_size": 64, 
   "gamma": 0.99,
   "tau": 0.001,
-  "epsilon": 0.2,
+  "epsilon": 0.9,
   "min_epsilon": 0.01,
   "epsilon_decay": 0.99,
   "buffer_size": 10000,
@@ -30,12 +31,13 @@ class Agent():
                  env,
                  gamma=0.99,
                  tau=1e-3,
-                 epsilon=0.2,
+                 epsilon=0.9,
                  min_epsilon=0.01,
                  epsilon_decay=0.99,
                  buffer_size=10000,
                  learning_rate=1e-6,
                  batch_size=64):
+
         self.env = env
         self.Q_target = DQN(env, learning_rate)
         self.Q = DQN(env, learning_rate)
@@ -61,10 +63,12 @@ class Agent():
         
         #avg_reward = 0
         losses = []
-        #episode = epoch
-        for episode in range(num_episodes):
-            total_actions = 0
 
+        #episode = epoch
+        #the agent die multiple times within an episode
+        for episode in range(num_episodes):
+            
+            total_actions = 0
             state = self.env.reset()
             episode_reward = 0
             done = False
@@ -97,7 +101,7 @@ class Agent():
                     continue
                 
                 #The rest will only be executed if the buffer is full
-                print("Sampling from the buffer")
+                #print("Sampling from the buffer")
                 
                 #sample from the buffer
                 states, actions, rewards, next_states, t = self.buffer.sample()
@@ -131,16 +135,12 @@ class Agent():
                 self.optimizer.step()
                 print(f"Episode {episode}: loss {loss.item()}")
                 losses.append(loss.item())
-
-            print(f"episode {episode}: total actions {total_actions}")
+            
+            print(f"Episode {episode}: total actions {total_actions} episode reward {episode_reward}")
 
             #at the end of the episide, log the total reward
             wandb.log({"episode_reward": episode_reward, "episode": episode})
 
-            #avg_reward = 0.9 * avg_reward + 0.1 * episode_reward
-            print(f"Episode {episode}: episode reward {episode_reward}")
-
-            
         plt.plot(losses)
         plt.show()
 
@@ -151,8 +151,9 @@ if __name__ == '__main__':
         env = gym.make("ALE/Breakout-v5", frameskip=1)
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
-        agent = Agent(env, buffer_size=100)
-        #W&B: watch the model. NOTE: DOES NOT WORK. Expects a torch nn model.
+        agent = Agent(env)
+        #W&B: watch the model
         wandb.watch(agent.Q)
-        agent.train(100)
+        #wandb.watch(agent.Q_target)
+        agent.train(500)
         
