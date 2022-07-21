@@ -5,11 +5,13 @@ Creator: Lucy, Kaitlyn, Maria, Linas
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
+import torch.utils.data as data
 # tqdm is a library for smart loops in ML used by neuromatch tutors
 import tqdm
 from audtorch.metrics import PearsonR
 
 from utils_saliency import set_device, set_seed
+from simple_fcn_gaze_pred import SimpleFCN
 
 # set device and random seed
 DEVICE = set_device()
@@ -17,15 +19,19 @@ DEVICE = set_device()
 SEED = 2022
 set_seed(seed=SEED)
 
-
+# %%
 #################
 # data preprocessing
 #################
+dataset = torch.load('processed_data/data.pt')
+train_set, val_set, test_set = data.random_split(dataset, [5, 5, 5], generator=torch.Generator().manual_seed(SEED))
 
-
+# %%
 #################
 # data set preparation
 #################
+BATCH_SIZE = 64
+train_loader = data.DataLoader(train_set, batch_size=64)
 
 
 #################

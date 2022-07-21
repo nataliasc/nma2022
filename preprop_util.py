@@ -86,6 +86,7 @@ def load_frames_gazetxt(trial_id, metadataframe, data_path='raw_data/breakout/')
     idx = np.argsort(num)
     frames_grey = frames_grey[idx]
 
+    print(len(frames_grey), len(gaze_data))
     assert len(frames_grey) == len(gaze_data)
 
     return frames_grey, gaze_data
