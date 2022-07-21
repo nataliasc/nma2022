@@ -17,7 +17,7 @@ wandb.init(project="test-project", entity="nma2022")
 wandb.config = {
   "num_episodes": 500,
   "learning_rate": 0.000001,
-  "batch_size": 64, 
+  "batch_size": 64,
   "gamma": 0.99,
   "tau": 0.001,
   "epsilon": 0.9,
@@ -30,7 +30,7 @@ class Agent():
     def __init__(self,
                  env,
                  gamma=0.99,
-                 tau=1e-3,
+                 tau=0.5,
                  epsilon=0.9,
                  min_epsilon=0.01,
                  epsilon_decay=0.99,
@@ -56,18 +56,15 @@ class Agent():
         self.optimizer = optim.Adam(self.Q.parameters(), self.learning_rate, eps=1.5e-4)
         self.loss = torch.nn.SmoothL1Loss()
 
-    def step(self, action):
-        pass
-
     def train(self, num_episodes):
-        
+
         #avg_reward = 0
         losses = []
 
         #episode = epoch
         #the agent die multiple times within an episode
         for episode in range(num_episodes):
-            
+
             total_actions = 0
             state = self.env.reset()
             episode_reward = 0
@@ -76,7 +73,7 @@ class Agent():
 
             #while the agent doesn't die
             while not done:
-                
+
                 # take an action
                 q_values = self.Q(torch.Tensor(state).unsqueeze(0))
 
@@ -95,14 +92,14 @@ class Agent():
 
                 state = next_state
                 episode_reward += reward
-                
+
                 #don't execute the rest if the buffer is not full
                 if not self.buffer.full():
                     continue
-                
+
                 #The rest will only be executed if the buffer is full
                 #print("Sampling from the buffer")
-                
+
                 #sample from the buffer
                 states, actions, rewards, next_states, t = self.buffer.sample()
                 actions = actions.long()
@@ -114,7 +111,7 @@ class Agent():
                     Q_target = self.Q_target(next_states)
                     Q_max = torch.max(Q_target)
                     y = rewards + (1 - t) * self.gamma * Q_max
-                
+
                 #x = Q value predicted by the policy network
                 x = self.Q(states)[range(self.batch_size), actions.squeeze()]
                 loss = self.loss(x, y.squeeze())
@@ -135,7 +132,7 @@ class Agent():
                 self.optimizer.step()
                 print(f"Episode {episode}: loss {loss.item()}")
                 losses.append(loss.item())
-            
+
             print(f"Episode {episode}: total actions {total_actions} episode reward {episode_reward}")
 
             #at the end of the episide, log the total reward
@@ -143,6 +140,25 @@ class Agent():
 
         plt.plot(losses)
         plt.show()
+
+    def test(self):
+
+        cumulative_reward = 0
+        state = self.env.reset()
+        while not done:
+
+            # take an action
+            q_values = self.Q(torch.Tensor(state).unsqueeze(0))
+
+            if random.random() < 0.01:  # epsilon-random policy
+                action = self.env.action_space.sample()
+            else:
+                action = torch.argmax(q_values)
+
+            next_state, reward, done, info = self.env.step(action)
+            cumulative_reward += reward
+
+            # visualise?
 
 if __name__ == '__main__':
         import gym
@@ -156,4 +172,3 @@ if __name__ == '__main__':
         wandb.watch(agent.Q)
         #wandb.watch(agent.Q_target)
         agent.train(500)
-        
