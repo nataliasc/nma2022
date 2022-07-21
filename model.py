@@ -22,6 +22,12 @@ class DQN(nn.Module):
 
         self.fc2 = nn.Linear(1024, self.output_shape)
 
+        nn.init.kaiming_normal_(self.conv1.weight, nonlinearity='leaky_relu')
+        nn.init.kaiming_normal_(self.conv2.weight, nonlinearity='leaky_relu')
+        nn.init.kaiming_normal_(self.conv3.weight, nonlinearity='leaky_relu')
+        nn.init.kaiming_normal_(self.fc1.weight, nonlinearity='leaky_relu')
+        nn.init.kaiming_normal_(self.fc2.weight, nonlinearity='leaky_relu')
+
     def forward(self, x):
         x = F.leaky_relu(self.conv1(x), 0.01)
         x = F.leaky_relu(self.conv2(x), 0.01)
@@ -41,4 +47,4 @@ if __name__ == '__main__':
         # obs, reward, done, info = env.step(action)
         model = DQN(env)
         model(torch.empty((1, 4, 84, 84), dtype=torch.float32))
-        model(torch.empty((64, 4, 84, 84), dtype=torch.float32)) # test
+        print(model(torch.empty((64, 4, 84, 84), dtype=torch.float32))) # test
