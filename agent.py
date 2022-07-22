@@ -10,10 +10,10 @@ import torch.optim as optim
 import numpy as np
 import wandb
 
-#Add hyperparameters to weights&biases
+# Add hyperparameters to weights&biases
 wandb.init(project="test-project", entity="nma2022")
 config = wandb.config
-config.num_episodes = 50000
+config.num_episodes = 10
 config.buffer_size = 10000
 config.learning_rate = 1e-6
 config.gamma = 0.99
@@ -23,22 +23,23 @@ config.min_epsilon = 0.01
 config.epsilon_decay = 0.99
 config.batch_size = 64
 
-#Find the device that the code will be running on
+# Find the device that the code will be running on
 DEVICE = set_device()
+
 
 class Agent():
     def __init__(self,
                  env,
-                 gamma = config.gamma,
-                 tau = config.tau,
-                 epsilon = config.epsilon,
-                 min_epsilon = config.min_epsilon,
-                 epsilon_decay = config.epsilon_decay,
-                 buffer_size = config.buffer_size,
-                 learning_rate = config.learning_rate,
-                 batch_size = config.batch_size,
-                 device = DEVICE):
-        
+                 gamma=config.gamma,
+                 tau=config.tau,
+                 epsilon=config.epsilon,
+                 min_epsilon=config.min_epsilon,
+                 epsilon_decay=config.epsilon_decay,
+                 buffer_size=config.buffer_size,
+                 learning_rate=config.learning_rate,
+                 batch_size=config.batch_size,
+                 device=DEVICE):
+
         self.device = device
         self.env = env
         self.Q_target = DQN(env, learning_rate).to(device)
@@ -60,11 +61,11 @@ class Agent():
 
     def train(self, num_episodes):
 
-        #avg_reward = 0
+        # avg_reward = 0
         losses = []
 
-        #episode = epoch
-        #the agent die multiple times within an episode
+        # episode = epoch
+        # the agent die multiple times within an episode
 
         for episode in range(num_episodes):
 
@@ -74,11 +75,11 @@ class Agent():
             done = False
             self.epsilon = max(self.epsilon * self.epsilon_decay, self.min_epsilon)
 
-            #while the agent doesn't die
+            # while the agent doesn't die
             while not done:
 
                 # take an action
-                #convert state to a single np.array (fix warning on conversion)
+                # convert state to a single np.array (fix warning on conversion)
                 state = np.array(state)
                 q_values = self.Q(torch.Tensor(state).unsqueeze(0).to(self.device))
 
@@ -87,7 +88,7 @@ class Agent():
                 else:
                     action = torch.argmax(q_values)
 
-                #store how many lives the agent has left
+                # store how many lives the agent has left
                 lives = self.env.ale.lives()
 
                 next_state, reward, done, info = self.env.step(action)
@@ -101,18 +102,18 @@ class Agent():
                 state = next_state
                 episode_reward += reward
 
-                #don't execute the rest if the buffer is not full
+                # don't execute the rest if the buffer is not full
                 if not self.buffer.full():
                     continue
 
-                #The rest will only be executed if the buffer is full
-                #print("Sampling from the buffer")
+                # The rest will only be executed if the buffer is full
+                # print("Sampling from the buffer")
 
-                #sample from the buffer
+                # sample from the buffer
                 states, actions, rewards, next_states, t = self.buffer.sample()
                 actions = actions.long()
 
-                #Decrease the buffer size, so new samples can be added
+                # Decrease the buffer size, so new samples can be added
                 self.buffer.size -= int(self.batch_size)
 
                 with torch.no_grad():
@@ -120,11 +121,11 @@ class Agent():
                     Q_max = torch.max(Q_target)
                     y = rewards + (1 - t) * self.gamma * Q_max
 
-                #x = Q value predicted by the policy network
+                # x = Q value predicted by the policy network
                 x = self.Q(states.to(self.device))[range(self.batch_size), actions.squeeze()]
                 loss = self.loss(x, y.squeeze())
 
-                #log the loss to w&b
+                # log the loss to w&b
                 wandb.log({"loss": loss, "episode": episode})
 
                 # backprop
@@ -138,16 +139,16 @@ class Agent():
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
 
                 self.optimizer.step()
-                #print(f"Episode {episode}: loss {loss.item()}")
+                # print(f"Episode {episode}: loss {loss.item()}")
                 losses.append(loss.cpu().item())
 
             print(f"Episode {episode}: total actions {total_actions} episode reward {episode_reward}")
 
-            #at the end of the episide, log the total reward
+            # at the end of the episide, log the total reward
             wandb.log({"episode_reward": episode_reward, "episode": episode, "total_episode_actions": total_actions})
 
-        #plt.plot(losses)
-        #plt.show()
+        # plt.plot(losses)
+        # plt.show()
 
     def test(self):
 
@@ -168,27 +169,28 @@ class Agent():
 
             # visualise?
 
+
 if __name__ == '__main__':
-        import gym
-        from gym.wrappers import AtariPreprocessing, FrameStack
-        import matplotlib.pyplot as plt
+    import gym
+    from gym.wrappers import AtariPreprocessing, FrameStack
+    import matplotlib.pyplot as plt
 
-        DEVICE = set_device()
+    DEVICE = set_device()
 
-        SEED = 2022
-        set_seed(seed=SEED)
+    SEED = 2022
+    set_seed(seed=SEED)
 
-        env = gym.make("ALE/Breakout-v5", frameskip=1)
-        env = AtariPreprocessing(env, frame_skip=4)
-        env = FrameStack(env, 4)
-        agent = Agent(env)
+    env = gym.make("ALE/Breakout-v5", frameskip=1)
+    env = AtariPreprocessing(env, frame_skip=4)
+    env = FrameStack(env, 4)
+    agent = Agent(env)
 
-        #W&B: watch the model
-        wandb.watch(agent.Q)
-        #wandb.watch(agent.Q_target)
+    # W&B: watch the model
+    wandb.watch(agent.Q)
+    # wandb.watch(agent.Q_target)
 
-        agent.train(config.num_episodes)
+    agent.train(config.num_episodes)
 
-        #NOTE: For serious training, save the model weights
-        # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
-        # torch.save(agent.Q_target.state_dict(), 'model_weights_Q_target.pth')
+    # NOTE: For serious training, save the model weights
+    # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
+    # torch.save(agent.Q_target.state_dict(), 'model_weights_Q_target.pth')
