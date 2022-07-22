@@ -172,6 +172,13 @@ if __name__ == '__main__':
         import gym
         from gym.wrappers import AtariPreprocessing, FrameStack
         import matplotlib.pyplot as plt
+
+        DEVICE = set_device()
+        print(DEVICE + ' is available')
+
+        SEED = 2022
+        set_seed(seed=SEED)
+
         env = gym.make("ALE/Breakout-v5", frameskip=1)
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
