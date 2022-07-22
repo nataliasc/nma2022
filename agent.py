@@ -8,36 +8,32 @@ import random
 import torch
 import torch.optim as optim
 import numpy as np
-
-#WEIGHTS AND BIASES. NOTE: need to pip install wandb, then log in
 import wandb
-wandb.init(project="test-project", entity="nma2022")
 
-#log hyperparameters
-wandb.config = {
-  "num_episodes": 50000,
-  "learning_rate": 0.00001,
-  "batch_size": 64, 
-  "gamma": 0.99,
-  "tau": 0.001,
-  "epsilon": 0.9,
-  "min_epsilon": 0.01,
-  "epsilon_decay": 0.99,
-  "buffer_size": 100000,
-  "watch()": "agent.Q"
-}
+#Add hyperparameters to weights&biases
+wandb.init(project="test-project", entity="nma2022")
+config = wandb.config
+config.num_episodes = 50000
+config.buffer_size = 10000
+config.learning_rate = 1e-6
+config.gamma = 0.99
+config.tau = 0.001
+config.epsilon = 0.9
+config.min_epsilon = 0.01
+config.epsilon_decay = 0.99
+config.batch_size = 64
 
 class Agent():
     def __init__(self,
                  env,
-                 gamma=0.99,
-                 tau=0.001,
-                 epsilon=0.9,
-                 min_epsilon=0.01,
-                 epsilon_decay=0.99,
-                 buffer_size=100000,
-                 learning_rate=1e-5,
-                 batch_size=64):
+                 gamma = config.gamma,
+                 tau = config.tau,
+                 epsilon = config.epsilon,
+                 min_epsilon = config.min_epsilon,
+                 epsilon_decay = config.epsilon_decay,
+                 buffer_size = config.buffer_size,
+                 learning_rate = config.learning_rate,
+                 batch_size = config.batch_size):
 
         self.env = env
         self.Q_target = DQN(env, learning_rate)
@@ -173,11 +169,13 @@ if __name__ == '__main__':
         env = AtariPreprocessing(env, frame_skip=4)
         env = FrameStack(env, 4)
         agent = Agent(env)
+
         #W&B: watch the model
         wandb.watch(agent.Q)
         #wandb.watch(agent.Q_target)
-        agent.train(50000)
         
-        #save the model weights
-        torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
-        torch.save(agent.Q_target.state_dict(), 'model_weights_Q_target.pth')
+        agent.train(10)
+
+        #NOTE: For serious training, save the model weights
+        # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
+        # torch.save(agent.Q_target.state_dict(), 'model_weights_Q_target.pth')
