@@ -174,7 +174,6 @@ if __name__ == '__main__':
         import matplotlib.pyplot as plt
 
         DEVICE = set_device()
-        print(DEVICE + ' is available')
 
         SEED = 2022
         set_seed(seed=SEED)
