@@ -7,41 +7,60 @@ dependencies:
   - astroid=2.9.0=py39hecd8cb5_0
   - blas=1.0=mkl
   - brotli=1.0.9=hb1e8313_2
+  - brotlipy=0.7.0=py39h9ed2024_1003
+  - bzip2=1.0.8=h1de35cc_0
   - ca-certificates=2022.4.26=hecd8cb5_0
   - certifi=2022.6.15=py39hecd8cb5_0
   - cffi=1.15.0=py39hc55c11b_1
   - cloudpickle=2.0.0=pyhd3eb1b0_0
+  - cryptography=37.0.1=py39hf6deb26_0
   - cycler=0.11.0=pyhd3eb1b0_0
+  - ffmpeg=4.3.2=hbf27d7b_3
   - fonttools=4.25.0=pyhd3eb1b0_0
   - freetype=2.11.0=hd8bbffd_0
   - future=0.18.2=py39hecd8cb5_1
+  - gettext=0.21.0=h7535e17_0
   - giflib=5.2.1=haf1e3a3_0
+  - gmp=6.2.1=he9d5cce_3
+  - gnutls=3.6.15=hed9c0bf_0
+  - icu=58.2=h0a44026_3
+  - idna=3.3=pyhd3eb1b0_0
   - intel-openmp=2021.4.0=hecd8cb5_3538
   - isort=5.9.3=pyhd3eb1b0_0
   - jpeg=9e=hca72f7f_0
   - kiwisolver=1.4.2=py39he9d5cce_0
+  - lame=3.100=h1de35cc_0
   - lazy-object-proxy=1.6.0=py39h9ed2024_0
   - lcms2=2.12=hf1fd2bf_0
-  - libblas=3.9.0=8_mkl
-  - libcblas=3.9.0=8_mkl
-  - libcxx=12.0.0=h2f01273_0
+  - libblas=3.9.0=15_osx64_mkl
+  - libcblas=3.9.0=15_osx64_mkl
+  - libcxx=14.0.6=hce7ea42_0
   - libffi=3.3=hb1e8313_2
-  - liblapack=3.9.0=8_mkl
+  - libiconv=1.16=hca72f7f_2
+  - libidn2=2.3.2=h9ed2024_0
+  - liblapack=3.9.0=15_osx64_mkl
   - libpng=1.6.37=ha441bb4_0
+  - libprotobuf=3.20.1=h8346a28_0
+  - libtasn1=4.16.0=h9ed2024_0
   - libtiff=4.2.0=hdb42f99_1
+  - libunistring=0.9.10=h9ed2024_0
   - libwebp=1.2.2=h56c3ce4_0
   - libwebp-base=1.2.2=hca72f7f_0
-  - llvm-openmp=12.0.0=h0dcd299_1
+  - libxml2=2.9.14=hbf8cd5e_0
+  - libzlib=1.2.12=hfe4f2af_2
+  - llvm-openmp=14.0.4=ha654fa7_0
   - lz4-c=1.9.3=h23ab428_1
   - matplotlib=3.5.1=py39hecd8cb5_1
   - matplotlib-base=3.5.1=py39hfb0c5b7_1
   - mccabe=0.7.0=pyhd3eb1b0_0
-  - mkl=2020.4=h08c4f10_301
+  - mkl=2022.1.0=h860c996_928
   - munkres=1.1.4=py_0
   - ncurses=6.3=hca72f7f_3
+  - nettle=3.7.3=h230ac6f_1
   - ninja=1.10.2=hecd8cb5_5
   - ninja-base=1.10.2=haf03e11_5
   - numpy=1.22.1=py39h9d9ce41_0
+  - openh264=2.1.1=h8346a28_0
   - openssl=1.1.1q=hca72f7f_0
   - packaging=21.3=pyhd3eb1b0_0
   - pillow=9.2.0=py39hde71d04_1
@@ -49,23 +68,29 @@ dependencies:
   - platformdirs=2.4.0=pyhd3eb1b0_0
   - pycparser=2.21=pyhd3eb1b0_0
   - pylint=2.12.2=py39hecd8cb5_1
+  - pyopenssl=22.0.0=pyhd3eb1b0_0
+  - pysocks=1.7.1=py39hecd8cb5_0
   - python=3.9.12=hdfd78df_1
   - python-dateutil=2.8.2=pyhd3eb1b0_0
   - python_abi=3.9=2_cp39
-  - pytorch=1.7.1=cpu_py39hb2aefe7_2
+  - pytorch=1.12.0=cpu_py39h9b0ea23_2
   - readline=8.1.2=hca72f7f_1
+  - requests=2.28.1=py39hecd8cb5_0
   - setuptools=61.2.0=py39hecd8cb5_0
   - six=1.16.0=pyhd3eb1b0_1
+  - sleef=3.5.1=h6db0672_2
   - sqlite=3.38.5=h707629a_0
+  - tbb=2021.5.0=haf03e11_0
   - tk=8.6.12=h5d9f67b_0
   - toml=0.10.2=pyhd3eb1b0_0
-  - torchvision=0.8.2=cpu_py39hde629fd_0
+  - torchvision=0.12.0=cpu_py39hc6672b5_0
   - tornado=6.1=py39h9ed2024_0
   - typing-extensions=4.1.1=hd3eb1b0_0
   - typing_extensions=4.1.1=pyh06a4308_0
   - tzdata=2022a=hda174b7_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - wrapt=1.13.3=py39hca72f7f_2
+  - x264=1!161.3030=h0d85af4_1
   - xz=5.2.5=hca72f7f_1
   - zlib=1.2.12=h4dc903c_2
   - zstd=1.5.2=hcb37349_0
@@ -81,9 +106,11 @@ dependencies:
     - charset-normalizer==2.1.0
     - click==8.1.3
     - decorator==5.1.1
+    - docker-pycreds==0.4.0
+    - gitdb==4.0.9
+    - gitpython==3.1.27
     - gym==0.25.0
     - gym-notices==0.0.7
-    - idna==3.3
     - importlib-metadata==4.12.0
     - importlib-resources==5.8.0
     - joblib==1.1.0
@@ -92,17 +119,27 @@ dependencies:
     - numba==0.55.2
     - opencv-python==4.6.0.66
     - pandas==1.4.3
+    - pathtools==0.1.2
     - pooch==1.6.0
+    - promise==2.3
+    - protobuf==3.20.1
+    - psutil==5.9.1
     - pyparsing==3.0.9
     - pytz==2022.1
-    - requests==2.28.1
+    - pyyaml==6.0
     - resampy==0.3.1
     - scikit-learn==1.1.1
     - scipy==1.8.1
+    - sentry-sdk==1.8.0
+    - setproctitle==1.2.3
+    - shortuuid==1.0.9
+    - smmap==5.0.0
     - soundfile==0.10.3.post1
     - sox==1.4.1
     - tabulate==0.8.10
     - threadpoolctl==3.1.0
     - tqdm==4.64.0
     - urllib3==1.26.10
+    - wandb==0.12.21
     - zipp==3.8.1
+prefix: /Users/lucyzhang/miniconda3/envs/nma2022

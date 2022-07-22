@@ -27,7 +27,7 @@ set_seed(seed=SEED)
 #################
 dataset = torch.load('processed_data/data_132.pt')
 total_samples = len(dataset)
-split = [int(.8*total_samples), int(.1*total_samples), int(.1*total_samples)]
+split = [int(.8 * total_samples), int(.1 * total_samples), int(.1 * total_samples)]
 train_set, val_set, test_set = data.random_split(dataset, split, generator=torch.Generator().manual_seed(SEED))
 
 # %%
@@ -40,7 +40,7 @@ wandb.init(project="saliency-prediction", entity="nma2022")
 config = wandb.config
 config.batch_size = 16
 config.lr = 1e-3
-config.epoch = 100
+config.epoch = 10
 
 train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
 val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
@@ -57,10 +57,36 @@ optimizer = torch.optim.SGD(net.parameters(), lr=config.lr, momentum=0.9)
 
 wandb.watch(net)
 
+
 # %%
 #################
 # evaluation function
 #################
+def pearson_r_batchmean(x, y):
+    """
+    compute pearson correlation between predicted heat maps
+    :param x: batch * 84 * 84  prediction tensor
+    :param y: batch * 84 * 84  target tensor
+    :return: pearson r, fill nan with 0 tensor
+    """
+    assert x.shape == y.shape
+    dim = -1  # batch first
+    centered_x = x - x.mean(dim=dim, keepdim=True)
+    centered_y = y - y.mean(dim=dim, keepdim=True)
+
+    covariance = (centered_x * centered_y).sum(dim=dim, keepdim=True)
+
+    bessel_corrected_covariance = covariance / (x.shape[dim] - 1)
+
+    x_std = x.std(dim=dim, keepdim=True)
+    y_std = y.std(dim=dim, keepdim=True)
+
+    corr = bessel_corrected_covariance / (x_std * y_std)
+
+    torch.nan_to_num(corr, nan=0.0)
+
+    return corr.mean()  # batch mean
+
 
 def eval_model(model, data_loader=test_loader, device=DEVICE):
     """
@@ -84,12 +110,11 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
             # Evaluate model and loss on minibatch
             preds = model(data.float())
             # compute batch mean kl div
-            kl_div = F.kl_div(preds, target.float(), reduction='batchmean').item()
+            kl_div = F.kl_div(preds, target.float(), reduction='batchmean').cpu().item()
             kl_log.append(kl_div)
             # compute batch mean pearsonr
-            metric_pr = PearsonR(reduction='mean', batch_first=True)
-            pear_corr = metric_pr(torch.flatten(preds, start_dim=1), torch.flatten(target,
-                                                                                   start_dim=1)).item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
+            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(target,
+                                                                                   start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
     return np.mean(kl_log), np.mean(corr_log)
@@ -174,7 +199,6 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
                 metrics['val_idx'].append(step_idx)
                 metrics['val_kl'].append(kl_div)
                 metrics['val_pearson_r'].append(pearson_r)
-
 
             # print statistics
             running_loss += loss.cpu().item()
