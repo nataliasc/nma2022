@@ -34,8 +34,8 @@ target_saliency_maps = []
 
 for trial in trial_ids:
     print('trial id: %i' % trial)
-    if trial == 132:
-        continue
+    # if trial == 132:
+    #     continue
     all_grey_frames, gaze_data = load_frames_gazetxt(trial, metadata_game)
 
     ################################

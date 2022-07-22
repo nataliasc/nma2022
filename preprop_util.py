@@ -175,6 +175,7 @@ def get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames):
         for fr in range(1, num_frames):
             current_epi_id = gaze_data_list[sampled_idx[fr]][1]
             if last_epi_id != current_epi_id:
+                start_index = np.random.randint(0, len(all_frames) - skip_fr * num_frames)
                 episode_ = get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames)
             else:
                 episode_ = all_frames[sampled_idx]

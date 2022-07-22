@@ -8,8 +8,8 @@ import torch
 import torch.nn.functional as F
 import torch.utils.data as data
 import torch.nn as nn
+import wandb
 # tqdm is a library for smart loops in ML used by neuromatch tutors
-import tqdm
 from audtorch.metrics import PearsonR
 
 from utils_saliency import set_device, set_seed
@@ -25,26 +25,37 @@ set_seed(seed=SEED)
 #################
 # data preprocessing
 #################
-dataset = torch.load('processed_data/data.pt')
-train_set, val_set, test_set = data.random_split(dataset, [5, 5, 5], generator=torch.Generator().manual_seed(SEED))
+dataset = torch.load('processed_data/data_132.pt')
+total_samples = len(dataset)
+split = [int(.8*total_samples), int(.1*total_samples), int(.1*total_samples)]
+train_set, val_set, test_set = data.random_split(dataset, split, generator=torch.Generator().manual_seed(SEED))
 
 # %%
 #################
 # data set preparation
 #################
-BATCH_SIZE = 1
-train_loader = data.DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
-val_loader = data.DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=True)
-test_loader = data.DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True)
+wandb.login(key='25f10546ef384a6f1ab9446b42d7513024dea001')
+wandb.init(project="saliency-prediction", entity="nma2022")
+
+config = wandb.config
+config.batch_size = 16
+config.lr = 1e-3
+config.epoch = 100
+
+train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
+val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
+test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
 
 # %%
 #################
 # network class
 #################
-net = SimpleFCN(BATCH_SIZE, DEVICE)
+net = SimpleFCN(config.batch_size, DEVICE)
 net.float()
 criterion = nn.KLDivLoss(reduction="batchmean")
-optimizer = torch.optim.SGD(net.parameters(), lr=1e-3, momentum=0.9)
+optimizer = torch.optim.SGD(net.parameters(), lr=config.lr, momentum=0.9)
+
+wandb.watch(net)
 
 # %%
 #################
@@ -89,9 +100,9 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
 #################
 
 def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
-          MAX_EPOCHS=2,
-          LOG_FREQ=1,
-          VAL_FREQ=1,
+          EPOCHS=config.epoch,
+          LOG_FREQ=5,
+          VAL_FREQ=20,
           device=DEVICE):
     """
   trains the model
@@ -101,7 +112,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
   :arg optimizer: optimizer for the network (torch.optim object)
   :arg loss_function: loss function used in the network (may need to specify if used for CPU or GPU)
   :arg eval_model: evaluation model used
-  :arg MAX_EPOCHS: number of epochs used to train the model
+  :arg EPOCHS: number of epochs used to train the model
   :arg LOG_FREQ (int): model prints training statistics every LOG_FREQ batches
   :arg VAL_FREQ (int): frequency for evaluating the validation metrics (measured in batches)
   :arg device (str, 'cpu' or 'cuda:0'): what device the network is trained on
@@ -118,7 +129,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     step_idx = 0
 
     # iterate over each epoch (full dataset)
-    for epoch in range(MAX_EPOCHS):
+    for epoch in range(EPOCHS):
 
         # at the start of the epoch, training loss is 0
         running_loss = 0.0
@@ -155,6 +166,10 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
             # calling eval_model
             if batch_id % VAL_FREQ == (VAL_FREQ - 1):
                 kl_div, pearson_r = eval_model(net, val_loader, device=device)
+                wandb.log({
+                    'val kl div': kl_div,
+                    'val pearson r': pearson_r
+                })
 
                 metrics['val_idx'].append(step_idx)
                 metrics['val_kl'].append(kl_div)
@@ -168,6 +183,9 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
             if batch_id % LOG_FREQ == (LOG_FREQ - 1):
                 print(f"[TRAIN] Epoch {epoch + 1} - Batch {batch_id + 1} - "
                       f"Loss: {running_loss / LOG_FREQ:.3f} - ")
+
+                wandb.log({f'avg loss over {LOG_FREQ} batches': running_loss / LOG_FREQ,
+                           'epoch': epoch})
 
                 # reset loss
                 running_loss = 0.0
@@ -188,7 +206,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     # Export the model to torchscript
     model_scripted = torch.jit.script(model)
     # Save the model
-    model_scripted.save('model_scripted.pt')
+    model_scripted.save('trained_sali_pred/model_scripted.pt')
 
     return model
 
