@@ -18,15 +18,15 @@ class DQN(nn.Module):
         self.conv3 = nn.Conv2d(64, 64, 3,
                                stride=1)
 
-        self.fc1 = nn.Linear(in_features= 7 * 7 * 64, out_features=1024)
+        self.fc1 = nn.Linear(in_features= 7 * 7 * 64, out_features=512)
 
-        self.fc2 = nn.Linear(1024, self.output_shape)
+        self.fc2 = nn.Linear(512, self.output_shape)
 
         nn.init.kaiming_normal_(self.conv1.weight, nonlinearity='leaky_relu')
         nn.init.kaiming_normal_(self.conv2.weight, nonlinearity='leaky_relu')
         nn.init.kaiming_normal_(self.conv3.weight, nonlinearity='leaky_relu')
         nn.init.kaiming_normal_(self.fc1.weight, nonlinearity='leaky_relu')
-        nn.init.kaiming_normal_(self.fc2.weight, nonlinearity='leaky_relu')
+        nn.init.kaiming_normal_(self.fc2.weight, nonlinearity='linear')
 
     def forward(self, x):
         x = F.leaky_relu(self.conv1(x), 0.01)

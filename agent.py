@@ -82,11 +82,11 @@ class Agent():
 
                 #store how many lives the agent has left
                 lives = self.env.ale.lives()
-                
+
                 next_state, reward, done, info = self.env.step(action)
 
                 total_actions += 1
-                
+
                 # add the tuple to the ReplayBuffer
                 sample = (state, action, reward, next_state, done or (self.env.ale.lives() != lives))
                 self.buffer.store(sample)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
         #W&B: watch the model
         wandb.watch(agent.Q)
         #wandb.watch(agent.Q_target)
-        
+
         agent.train(10)
 
         #NOTE: For serious training, save the model weights
