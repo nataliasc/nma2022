@@ -9,10 +9,10 @@ class ReplayBuffer():
         self.max_size, self.batch_size = size, batch_size
         self._idx, self.size = 0, 0
 
-        self.states = torch.Tensor([size, *self.obs_space], dtype=torch.float64)
+        self.states = torch.Tensor((size, *self.obs_space), dtype=torch.float64)
         self.actions = torch.Tensor(size, dtype=torch.int32)
         self.rewards = torch.Tensor(size, dtype=torch.float64)
-        self.next_states = torch.Tensor([size, *self.obs_space], dtype=torch.float64)
+        self.next_states = torch.Tensor((size, *self.obs_space), dtype=torch.float64)
         self.done = torch.Tensor(size)
 
     def store(self, sample):
