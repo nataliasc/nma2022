@@ -13,7 +13,7 @@ import wandb
 # Add hyperparameters to weights&biases
 wandb.init(project="test-project", entity="nma2022")
 config = wandb.config
-config.num_episodes = 10
+config.num_episodes = 50000
 config.buffer_size = 10000
 config.learning_rate = 1e-6
 config.gamma = 0.99
