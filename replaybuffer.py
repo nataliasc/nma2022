@@ -17,11 +17,27 @@ class ReplayBuffer():
     def store(self, sample):
         state, action, reward, next_state, done = sample
 
-        self.states[self._idx] = state
-        self.actions[self._idx] = action
-        self.rewards[self._idx] = reward
-        self.next_states[self._idx] = next_state
-        self.done[self._idx] = done
+        #convert all vars to np arrays
+        #fixes warning on slow conversion from a list of numpy.ndarrays to tensor
+        state = np.array(state)
+        action = np.array(action)
+        reward = np.array(reward)
+        next_state = np.array(next_state)
+        done = np.array(done)
+
+        # self.states[self._idx] = state
+        # self.actions[self._idx] = action
+        # self.rewards[self._idx] = reward
+        # self.next_states[self._idx] = next_state
+        # self.done[self._idx] = done
+        
+        #convert to tensor
+        self.states[self._idx] = torch.tensor(state)
+        self.actions[self._idx] = torch.tensor(action)
+        self.rewards[self._idx] = torch.tensor(reward)
+        self.next_states[self._idx] = torch.tensor(next_state)
+        self.done[self._idx] = torch.tensor(done)
+
         self._idx += 1
         self._idx = self._idx % self.max_size
         self.size += 1

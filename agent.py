@@ -13,7 +13,7 @@ import wandb
 #Add hyperparameters to weights&biases
 wandb.init(project="test-project", entity="nma2022")
 config = wandb.config
-config.num_episodes = 50000
+config.num_episodes = 10
 config.buffer_size = 10000
 config.learning_rate = 1e-6
 config.gamma = 0.99
@@ -22,6 +22,9 @@ config.epsilon = 0.9
 config.min_epsilon = 0.01
 config.epsilon_decay = 0.99
 config.batch_size = 64
+
+#Find the device that the code will be running on
+DEVICE = set_device()
 
 class Agent():
     def __init__(self,
@@ -33,11 +36,13 @@ class Agent():
                  epsilon_decay = config.epsilon_decay,
                  buffer_size = config.buffer_size,
                  learning_rate = config.learning_rate,
-                 batch_size = config.batch_size):
-
+                 batch_size = config.batch_size,
+                 device = DEVICE):
+        
+        self.device = device
         self.env = env
-        self.Q_target = DQN(env, learning_rate)
-        self.Q = DQN(env, learning_rate)
+        self.Q_target = DQN(env, learning_rate).to(device)
+        self.Q = DQN(env, learning_rate).to(device)
         self.Q_target.load_state_dict(
             self.Q.state_dict())  # set the weights of the target network to those of the policy network
         self.action_space = env.action_space.n
@@ -73,7 +78,9 @@ class Agent():
             while not done:
 
                 # take an action
-                q_values = self.Q(torch.Tensor(state).unsqueeze(0))
+                #convert state to a single np.array (fix warning on conversion)
+                state = np.array(state)
+                q_values = self.Q(torch.Tensor(state).unsqueeze(0).to(self.device))
 
                 if random.random() < self.epsilon:  # epsilon-random policy
                     action = self.env.action_space.sample()
@@ -109,12 +116,12 @@ class Agent():
                 self.buffer.size -= int(self.batch_size)
 
                 with torch.no_grad():
-                    Q_target = self.Q_target(next_states)
+                    Q_target = self.Q_target(next_states.to(self.device))
                     Q_max = torch.max(Q_target)
                     y = rewards + (1 - t) * self.gamma * Q_max
 
                 #x = Q value predicted by the policy network
-                x = self.Q(states)[range(self.batch_size), actions.squeeze()]
+                x = self.Q(states.to(self.device))[range(self.batch_size), actions.squeeze()]
                 loss = self.loss(x, y.squeeze())
 
                 #log the loss to w&b
@@ -132,7 +139,7 @@ class Agent():
 
                 self.optimizer.step()
                 #print(f"Episode {episode}: loss {loss.item()}")
-                losses.append(loss.item())
+                losses.append(loss.cpu().item())
 
             print(f"Episode {episode}: total actions {total_actions} episode reward {episode_reward}")
 
@@ -149,7 +156,7 @@ class Agent():
         while not done:
 
             # take an action
-            q_values = self.Q(torch.Tensor(state).unsqueeze(0))
+            q_values = self.Q(torch.Tensor(state).unsqueeze(0).to(self.device))
 
             if random.random() < 0.01:  # epsilon-random policy
                 action = self.env.action_space.sample()
@@ -174,7 +181,7 @@ if __name__ == '__main__':
         wandb.watch(agent.Q)
         #wandb.watch(agent.Q_target)
 
-        agent.train(10)
+        agent.train(config.num_episodes)
 
         #NOTE: For serious training, save the model weights
         # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
