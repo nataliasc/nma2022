@@ -27,13 +27,15 @@ trial_ids = metadata_game['trial_id'].to_numpy()
 # hyperparameters controlling sampling
 n_skips = 4
 n_frames_per_episode = 4
-n_samples = 2000  # number of episodes taken from each trial
+n_samples = 4000  # number of episodes taken from each trial
 # list containing all data points
 episode_samples = []
 target_saliency_maps = []
 
 for trial in trial_ids:
     print('trial id: %i' % trial)
+    if trial == 132:
+        continue
     all_grey_frames, gaze_data = load_frames_gazetxt(trial, metadata_game)
 
     ################################
@@ -53,7 +55,7 @@ for trial in trial_ids:
             n_frame_no_gaze += 1
             gaze_maps.append(np.zeros((210, 160)))
     gaze_maps = np.array(gaze_maps)
-    print('%i gaze positions are out of frame' % n_out_of_fr)
+    print(f'{n_out_of_fr/(len(gaze_data) * 50)} of gaze positions are out of frame')
     print('%i frames have no gaze position data' % n_frame_no_gaze)
 
     ################################
