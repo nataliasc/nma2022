@@ -153,7 +153,7 @@ def gaze_pos_to_map(coor):
     return map_, out_of_fr_count
 
 
-def get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames):
+def get_episode(skip_fr, num_frames, gaze_data_list, all_frames):
     """
     sample 4 frame episodes from all frames
     :param all_frames: nd array containing all preprocessed frames
@@ -163,6 +163,8 @@ def get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames):
     :param gaze_data_list: list containing gaze data info per frame, used to check whether frames are from same game
     :return: nd array of episode, num_frames*fr_h*fr_w
     """
+    # get start index
+    start_index = np.random.randint(0, len(all_frames) - skip_fr * num_frames)
     # get indices of sampled frames
     sampled_idx = np.arange(start_index, start_index + skip_fr * num_frames, skip_fr)
     assert len(sampled_idx) == num_frames
@@ -175,14 +177,13 @@ def get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames):
         for fr in range(1, num_frames):
             current_epi_id = gaze_data_list[sampled_idx[fr]][1]
             if last_epi_id != current_epi_id:
-                start_index = np.random.randint(0, len(all_frames) - skip_fr * num_frames)
-                episode_ = get_episode(start_index, skip_fr, num_frames, gaze_data_list, all_frames)
+                episode_, start_index = get_episode(skip_fr, num_frames, gaze_data_list, all_frames)
             else:
                 episode_ = all_frames[sampled_idx]
     else:
         episode_ = all_frames[sampled_idx]
 
-    return episode_
+    return episode_, start_index
 
 
 def create_saliency_density(start_index, skips, num_frames, density_map_dim, all_gaze_maps):

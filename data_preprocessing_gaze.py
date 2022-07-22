@@ -62,8 +62,7 @@ for trial in trial_ids:
     # sample from frames to create (4 frame episodes, combined saliency density map)
     ################################
     for times in range(n_samples):
-        start_idx = np.random.randint(0, len(all_grey_frames) - n_skips * n_frames_per_episode)
-        episode = get_episode(start_idx, n_skips, n_frames_per_episode, gaze_data, all_grey_frames)
+        episode, start_idx = get_episode(n_skips, n_frames_per_episode, gaze_data, all_grey_frames)
         saliency_density = create_saliency_density(start_idx, n_skips, n_frames_per_episode, [84, 84], gaze_maps)
 
         episode_samples.append(episode)
