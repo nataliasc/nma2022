@@ -3,9 +3,11 @@ This file contains the code for saliency prediction algorithm.
 Creator: Lucy, Kaitlyn, Maria, Linas
 """
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.utils.data as data
+import torch.nn as nn
 # tqdm is a library for smart loops in ML used by neuromatch tutors
 import tqdm
 from audtorch.metrics import PearsonR
@@ -30,20 +32,26 @@ train_set, val_set, test_set = data.random_split(dataset, [5, 5, 5], generator=t
 #################
 # data set preparation
 #################
-BATCH_SIZE = 64
-train_loader = data.DataLoader(train_set, batch_size=64)
+BATCH_SIZE = 1
+train_loader = data.DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = data.DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=True)
+test_loader = data.DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True)
 
-
+# %%
 #################
 # network class
 #################
+net = SimpleFCN(BATCH_SIZE, DEVICE)
+net.float()
+criterion = nn.KLDivLoss(reduction="batchmean")
+optimizer = torch.optim.SGD(net.parameters(), lr=1e-3, momentum=0.9)
 
-
+# %%
 #################
 # evaluation function
 #################
 
-def eval_model(model, data_loader, device=DEVICE):
+def eval_model(model, data_loader=test_loader, device=DEVICE):
     """
     evaluates the performance of saliency prediction by giving separate losses
     :arg model: defined network object
@@ -63,9 +71,9 @@ def eval_model(model, data_loader, device=DEVICE):
             # Extract minibatch data
             data, target = batch[0].to(device), batch[1].to(device)
             # Evaluate model and loss on minibatch
-            preds = model(data)
+            preds = model(data.float())
             # compute batch mean kl div
-            kl_div = F.kl_div(preds, target, reduction='batchmean').item()
+            kl_div = F.kl_div(preds, target.float(), reduction='batchmean').item()
             kl_log.append(kl_div)
             # compute batch mean pearsonr
             metric_pr = PearsonR(reduction='mean', batch_first=True)
@@ -82,8 +90,8 @@ def eval_model(model, data_loader, device=DEVICE):
 
 def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
           MAX_EPOCHS=2,
-          LOG_FREQ=200,
-          VAL_FREQ=200,
+          LOG_FREQ=1,
+          VAL_FREQ=1,
           device=DEVICE):
     """
   trains the model
@@ -102,15 +110,15 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
     # define metrics
     metrics = {'train_loss': [],
-               'val_loss': [],
+               'val_kl': [],
+               'val_pearson_r': [],
                'val_idx': []}
 
     # step_idx is the counter of BATCHES within an epoch
     step_idx = 0
 
     # iterate over each epoch (full dataset)
-    # tqdm is a library for loops in ML
-    for epoch in tqdm(range(MAX_EPOCHS)):
+    for epoch in range(MAX_EPOCHS):
 
         # at the start of the epoch, training loss is 0
         running_loss = 0.0
@@ -128,11 +136,11 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
             optimizer.zero_grad()
 
             # 2. run forward prop (apply the convnet on the input data)
-            preds = model(data)
+            preds = model(data.float())
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
-            loss = loss_function(preds, labels)
+            loss = loss_function(preds, labels.float())
 
             # 4. calculate the gradients
             loss.backward()
@@ -146,13 +154,12 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
             # Every 1 in VAL_FREQ iterations, get validation metrics and print them
             # calling eval_model
             if batch_id % VAL_FREQ == (VAL_FREQ - 1):
-                val_loss = eval_model(model, val_loader, num_batches=100, device=device)
+                kl_div, pearson_r = eval_model(net, val_loader, device=device)
 
                 metrics['val_idx'].append(step_idx)
-                metrics['val_loss'].append(val_loss)
+                metrics['val_kl'].append(kl_div)
+                metrics['val_pearson_r'].append(pearson_r)
 
-                print(f"[VALID] Epoch {epoch + 1} - Batch {batch_id + 1} - "
-                      f"Loss: {val_loss:.3f}")
 
             # print statistics
             running_loss += loss.cpu().item()
@@ -184,3 +191,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     model_scripted.save('model_scripted.pt')
 
     return model
+
+
+# %%
+trained_model = train(net, train_loader, val_loader, optimizer, criterion, eval_model)
