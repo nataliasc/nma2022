@@ -36,11 +36,11 @@ class ReplayBuffer():
 
         idxs = np.random.choice(self.size, batch_size,
                                 replace=False)
-        state = self.states[idxs, ...]
-        action = self.actions[idxs, ...]
-        reward = self.rewards[idxs, ...]
-        next_state = self.next_states[idxs, ...]
-        done = self.done[idxs, ...]
+        state = self.states[idxs,...]
+        action = self.actions[idxs,...]
+        reward = self.rewards[idxs,...]
+        next_state = self.next_states[idxs,...]
+        done = self.done[idxs,...]
 
         return torch.Tensor(state), torch.Tensor(action), torch.Tensor(reward), torch.Tensor(next_state), torch.Tensor(done)
 
@@ -62,5 +62,5 @@ if __name__ == '__main__':
             next_state, reward, done, truncated, info = env.step(action)
             buffer.store((state, action, reward, next_state, done))
             state = next_state
-        s, a, r, n_s, d = buffer.sample()
+        s, a, r, s_prime, d = buffer.sample()
         print(s.shape) # first dim is batch_size

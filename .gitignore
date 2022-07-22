@@ -1,3 +1,6 @@
+~/
+*.png
+*.gif
 .idea/
 .DS_Store
 

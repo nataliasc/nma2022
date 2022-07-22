@@ -1,0 +1,22 @@
+{
+    "os": "macOS-12.3.1-arm64-arm-64bit",
+    "python": "3.9.13",
+    "heartbeatAt": "2022-07-22T08:45:38.684467",
+    "startedAt": "2022-07-22T08:45:37.901276",
+    "docker": null,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/linasnasvytis/Desktop/Other/neuromatch/Project/nma2022/agent.py",
+    "codePath": "agent.py",
+    "git": {
+        "remote": "https://github.com/nataliasc/nma2022.git",
+        "commit": "ba122dac2988bcf9b0a395a32045bbd474f62d4f"
+    },
+    "email": "lmn2146@columbia.edu",
+    "root": "/Users/linasnasvytis/Desktop/Other/neuromatch/Project/nma2022",
+    "host": "Linass-MacBook-Pro.local",
+    "username": "linasnasvytis",
+    "executable": "/Library/Frameworks/Python.framework/Versions/3.9/bin/python3"
+}
