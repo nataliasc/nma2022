@@ -119,7 +119,7 @@ class Agent():
                 with torch.no_grad():
                     Q_target = self.Q_target(next_states.to(self.device))
                     Q_max = torch.max(Q_target)
-                    y = rewards + (1 - t) * self.gamma * Q_max
+                    y = rewards.to(self.device) + (1 - t) * self.gamma * Q_max
 
                 # x = Q value predicted by the policy network
                 x = self.Q(states.to(self.device))[range(self.batch_size), actions.squeeze()]
