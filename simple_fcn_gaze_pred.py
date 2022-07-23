@@ -38,11 +38,11 @@ class SimpleFCN(nn.Module):
             torch.nn.ReLU(),
 
             torch.nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
-            torch.nn.BatchNorm2d(64),
+            # torch.nn.BatchNorm2d(64),
             torch.nn.ReLU(),
 
             torch.nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
-            torch.nn.BatchNorm2d(64),
+            # torch.nn.BatchNorm2d(64),
             torch.nn.ReLU()
         )
         self.decoder = nn.Sequential(
