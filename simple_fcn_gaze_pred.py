@@ -47,11 +47,11 @@ class SimpleFCN(nn.Module):
         )
         self.decoder = nn.Sequential(
             torch.nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
-            torch.nn.BatchNorm2d(64),
+            # torch.nn.BatchNorm2d(64),
             torch.nn.ReLU(),
 
             torch.nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=4, stride=2),
-            torch.nn.BatchNorm2d(32),
+            # torch.nn.BatchNorm2d(32),
             torch.nn.ReLU(),
 
             torch.nn.ConvTranspose2d(in_channels=32, out_channels=1, kernel_size=8, stride=4),
