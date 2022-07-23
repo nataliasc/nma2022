@@ -1,5 +1,5 @@
 import gym
-from gym.wrappers import AtariPreprocessing, FrameStack
+from gym.wrappers import AtariPreprocessing, FrameStack, RecordVideo
 
 from model import DQN
 from replaybuffer import ReplayBuffer
@@ -12,7 +12,7 @@ import wandb
 import time
 
 # Add hyperparameters to weights&biases
-wandb.init(project="test-project", entity="nma2022")
+wandb.init(project="test-project", entity="nma2022", monitor_gym=True)
 config = wandb.config
 config.num_episodes = 50_000
 config.buffer_size = 10_000
@@ -186,14 +186,15 @@ if __name__ == '__main__':
     env = gym.make("ALE/Breakout-v5", frameskip=1)
     env = AtariPreprocessing(env, frame_skip=4)
     env = FrameStack(env, 4)
+    env = RecordVideo(env, './video', episode_trigger=lambda x: x%2==0)
     agent = Agent(env, buffer_size=100)
-
-    # W&B: watch the model
+    #
+    # # W&B: watch the model
     wandb.watch(agent.Q)
-    # wandb.watch(agent.Q_target)
+    # # wandb.watch(agent.Q_target)
+    #
+    agent.train(5)
 
-    agent.train(2)
-
-    # NOTE: For serious training, save the model weights
+    # NOTE: For __very__ serious training, save the model weights
     # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
     # torch.save(agent.Q_target.state_dict(), 'model_weights_Q_target.pth')
