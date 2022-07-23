@@ -9,15 +9,16 @@ import torch
 import torch.optim as optim
 import numpy as np
 import wandb
+import time
 
 # Add hyperparameters to weights&biases
 wandb.init(project="test-project", entity="nma2022")
 config = wandb.config
-config.num_episodes = 50000
-config.buffer_size = 10000
-config.learning_rate = 1e-6
+config.num_episodes = 50_000
+config.buffer_size = 10_000
+config.learning_rate = 1e-5
 config.gamma = 0.99
-config.tau = 0.001
+config.tau = 0.05
 config.epsilon = 0.9
 config.min_epsilon = 0.01
 config.epsilon_decay = 0.99
@@ -147,8 +148,10 @@ class Agent():
             # at the end of the episide, log the total reward
             wandb.log({"episode_reward": episode_reward, "episode": episode, "total_episode_actions": total_actions})
 
-        # plt.plot(losses)
-        # plt.show()
+            if episode % 1 == 0:
+                timestr = time.strftime("%Y%m%d-%H%M%S")
+                torch.save(agent.Q.state_dict(), f"model_weights_Q_e_{episode}_{timestr}.pth")
+                torch.save(agent.Q_target.state_dict(), f"model_weights_Q_target_episode{episode}.pth")
 
     def test(self):
 
@@ -183,13 +186,13 @@ if __name__ == '__main__':
     env = gym.make("ALE/Breakout-v5", frameskip=1)
     env = AtariPreprocessing(env, frame_skip=4)
     env = FrameStack(env, 4)
-    agent = Agent(env)
+    agent = Agent(env, buffer_size=100)
 
     # W&B: watch the model
     wandb.watch(agent.Q)
     # wandb.watch(agent.Q_target)
 
-    agent.train(config.num_episodes)
+    agent.train(2)
 
     # NOTE: For serious training, save the model weights
     # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
