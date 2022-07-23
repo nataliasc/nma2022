@@ -14,8 +14,8 @@ import time
 # Add hyperparameters to weights&biases
 wandb.init(project="test-project", entity="nma2022", monitor_gym=True)
 config = wandb.config
-config.num_episodes = 50_000
-config.buffer_size = 10_000
+config.num_episodes = 50000
+config.buffer_size = 10000
 config.learning_rate = 1e-5
 config.gamma = 0.99
 config.tau = 0.05
@@ -31,15 +31,15 @@ DEVICE = set_device()
 class Agent():
     def __init__(self,
                  env,
-                 gamma=0.99,
-                 tau=0.05,
-                 epsilon=1.,
-                 min_epsilon=0.01,
-                 epsilon_decay=0.99995,
-                 buffer_size=10_000,
-                 learning_rate=1e-5,
-                 batch_size=64,
-                 device="cpu"):
+                 gamma=config.gamma,
+                 tau=config.tau,
+                 epsilon=config.epsilon,
+                 min_epsilon=config.min_epsilon,
+                 epsilon_decay=config.epsilon_decay,
+                 buffer_size=config.buffer_size,
+                 learning_rate=config.learning_rate,
+                 batch_size=config.batch_size,
+                 device=DEVICE):
 
         self.device = device
         self.env = env
@@ -187,8 +187,8 @@ if __name__ == '__main__':
     env = gym.make("ALE/Breakout-v5", frameskip=1)
     env = AtariPreprocessing(env, frame_skip=4)
     env = FrameStack(env, 4)
-    env = RecordVideo(env, './video', episode_trigger=lambda x: x%100==0)
-    agent = Agent(env, buffer_size=100)
+    env = RecordVideo(env, './video', episode_trigger=lambda x: x%1000==0)
+    agent = Agent(env, buffer_size=10000)
 
     # W&B: watch the model
     wandb.watch(agent.Q)
