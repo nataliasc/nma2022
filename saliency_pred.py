@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import torch.utils.data as data
 import torch.nn as nn
 import wandb
+import seaborn as sns
 # tqdm is a library for smart loops in ML used by neuromatch tutors
 from audtorch.metrics import PearsonR
 
@@ -25,7 +26,7 @@ set_seed(seed=SEED)
 #################
 # data preprocessing
 #################
-dataset = torch.load('processed_data/data_132.pt')
+dataset = torch.load('processed_data/data.pt')
 total_samples = len(dataset)
 split = [int(.8 * total_samples), int(.1 * total_samples), int(.1 * total_samples)]
 train_set, val_set, test_set = data.random_split(dataset, split, generator=torch.Generator().manual_seed(SEED))
@@ -40,7 +41,9 @@ wandb.init(project="saliency-prediction", entity="nma2022")
 config = wandb.config
 config.batch_size = 16
 config.lr = 1e-3
-config.epoch = 10
+config.epoch = 500
+config.log_freq = 200
+config.val_freq = 200
 
 train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
 val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
@@ -52,10 +55,10 @@ test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=Tr
 #################
 net = SimpleFCN(config.batch_size, DEVICE)
 net.float()
-criterion = nn.KLDivLoss(reduction="batchmean")
-optimizer = torch.optim.SGD(net.parameters(), lr=config.lr, momentum=0.9)
+criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
+optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
 
-wandb.watch(net)
+wandb.watch(net, log_freq=100)
 
 
 # %%
@@ -83,9 +86,23 @@ def pearson_r_batchmean(x, y):
 
     corr = bessel_corrected_covariance / (x_std * y_std)
 
-    torch.nan_to_num(corr, nan=0.0)
+    corr = torch.nan_to_num(corr, nan=0.0, posinf=1, neginf=-1)  # get rid of nan values
 
     return corr.mean()  # batch mean
+
+
+def plot_map(pred_map):
+    """
+    plot predicted saliency density in log space during validation
+    :param pred_map: tensor 84*84 containing saliency density
+    :return: fig object for logging on wandb
+    """
+    pred_map = pred_map.numpy()
+
+    fig, ax = plt.subplots()
+    sns.heatmap(pred_map, ax=ax)
+
+    return fig
 
 
 def eval_model(model, data_loader=test_loader, device=DEVICE):
@@ -109,13 +126,21 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
             data, target = batch[0].to(device), batch[1].to(device)
             # Evaluate model and loss on minibatch
             preds = model(data.float())
+            preds = torch.squeeze(preds)  # raw pred dim: batch*1*84*84, target dim: batch*84*84
+            log_target = torch.log(target)  # convert target to log space for comparison
             # compute batch mean kl div
-            kl_div = F.kl_div(preds, target.float(), reduction='batchmean').cpu().item()
+            kl_div = F.kl_div(preds, log_target.float(), reduction='batchmean', log_target=False).cpu().item()
             kl_log.append(kl_div)
             # compute batch mean pearsonr
-            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(target,
-                                                                                   start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
+            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(log_target,
+                                                                                             start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
+
+            if batch_id == len(data_loader) - 1:
+                pred_map = plot_map(torch.squeeze(preds[0, :, :].cpu()))
+                wandb.log({'val predicted saliency density': wandb.Image(pred_map)})
+                target_map = plot_map(torch.squeeze(log_target[0, :, :].cpu()))
+                wandb.log({'val target saliency density': wandb.Image(target_map)})
 
     return np.mean(kl_log), np.mean(corr_log)
 
@@ -126,8 +151,8 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
 
 def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
           EPOCHS=config.epoch,
-          LOG_FREQ=5,
-          VAL_FREQ=20,
+          LOG_FREQ=config.log_freq,
+          VAL_FREQ=config.val_freq,
           device=DEVICE):
     """
   trains the model
@@ -176,7 +201,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
-            loss = loss_function(preds, labels.float())
+            loss = loss_function(torch.squeeze(preds), labels.float())
 
             # 4. calculate the gradients
             loss.backward()
