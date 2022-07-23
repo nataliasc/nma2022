@@ -21,7 +21,7 @@ config.gamma = 0.99
 config.tau = 0.05
 config.epsilon = 0.9
 config.min_epsilon = 0.01
-config.epsilon_decay = 0.99
+config.epsilon_decay = 0.99995
 config.batch_size = 64
 
 # Find the device that the code will be running on
@@ -75,6 +75,7 @@ class Agent():
             episode_reward = 0
             done = False
             self.epsilon = max(self.epsilon * self.epsilon_decay, self.min_epsilon)
+            wandb.log({"epsilon": self.epsilon})
 
             # while the agent doesn't die
             while not done:
@@ -93,7 +94,7 @@ class Agent():
                 lives = self.env.ale.lives()
 
                 next_state, reward, done, info = self.env.step(action)
-
+                wandb.log({"frames": info['frame_number']})
                 total_actions += 1
 
                 # add the tuple to the ReplayBuffer
@@ -139,19 +140,22 @@ class Agent():
                 for target_param, param in zip(self.Q_target.parameters(), self.Q.parameters()):
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
 
+                # for param in self.Q.parameters(): # gradient clipping
+                #     param.grad.data.clamp_(-1, 1)
+
                 self.optimizer.step()
                 # print(f"Episode {episode}: loss {loss.item()}")
                 losses.append(loss.cpu().item())
 
-            print(f"Episode {episode}: total actions {total_actions} episode reward {episode_reward}")
+            print(f"Episode {episode}: total actions {total_actions}; episode reward {episode_reward}")
 
             # at the end of the episide, log the total reward
             wandb.log({"episode_reward": episode_reward, "episode": episode, "total_episode_actions": total_actions})
 
-            if episode % 1 == 0:
+            if episode % 100 == 0:
                 timestr = time.strftime("%Y%m%d-%H%M%S")
                 torch.save(agent.Q.state_dict(), f"model_weights_Q_e_{episode}_{timestr}.pth")
-                torch.save(agent.Q_target.state_dict(), f"model_weights_Q_target_episode{episode}.pth")
+                torch.save(agent.Q_target.state_dict(), f"model_weights_Q_target_episode{episode}_{timestr}.pth")
 
     def test(self):
 
@@ -170,30 +174,26 @@ class Agent():
             next_state, reward, done, info = self.env.step(action)
             cumulative_reward += reward
 
-            # visualise?
-
 
 if __name__ == '__main__':
     import gym
     from gym.wrappers import AtariPreprocessing, FrameStack
     import matplotlib.pyplot as plt
-
     DEVICE = set_device()
-
     SEED = 2022
     set_seed(seed=SEED)
 
+    # useful: https://brosa.ca/blog/ale-release-v0.7/#openai-gym
     env = gym.make("ALE/Breakout-v5", frameskip=1)
     env = AtariPreprocessing(env, frame_skip=4)
     env = FrameStack(env, 4)
-    env = RecordVideo(env, './video', episode_trigger=lambda x: x%2==0)
-    agent = Agent(env, buffer_size=100)
-    #
-    # # W&B: watch the model
+    env = RecordVideo(env, './video', episode_trigger=lambda x: x%100==0)
+    agent = Agent(env, buffer_size=10_000)
+
+    # W&B: watch the model
     wandb.watch(agent.Q)
-    # # wandb.watch(agent.Q_target)
-    #
-    agent.train(5)
+    # wandb.watch(agent.Q_target)
+    agent.train(500)
 
     # NOTE: For __very__ serious training, save the model weights
     # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
