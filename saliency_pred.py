@@ -54,7 +54,7 @@ test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=Tr
 # network class
 #################
 net = SimpleFCN(config.batch_size, DEVICE)
-net.float()
+net.float().to(DEVICE)
 criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
 optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
 
@@ -123,9 +123,9 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
     with torch.no_grad():
         for batch_id, batch in enumerate(data_loader):
             # Extract minibatch data
-            data, target = batch[0].to(device), batch[1].to(device)
+            data, target = batch[0].float().to(device), batch[1].float().to(device)
             # Evaluate model and loss on minibatch
-            preds = model(data.float())
+            preds = model(data)
             preds = torch.squeeze(preds)  # raw pred dim: batch*1*84*84, target dim: batch*84*84
             log_target = torch.log(target)  # convert target to log space for comparison
             # compute batch mean kl div
@@ -191,17 +191,17 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
             step_idx += 1
 
             # get data: Extract minibatch data and labels, make sure the rest runs on the right device
-            data, labels = batch[0].to(device), batch[1].to(device)
+            data, labels = batch[0].float().to(device), batch[1].float().to(device)
 
             # 1. set the parameter gradients to zero
             optimizer.zero_grad()
 
             # 2. run forward prop (apply the convnet on the input data)
-            preds = model(data.float())
+            preds = model(data)
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
-            loss = loss_function(torch.squeeze(preds), labels.float())
+            loss = loss_function(torch.squeeze(preds), labels)
 
             # 4. calculate the gradients
             loss.backward()
