@@ -31,15 +31,15 @@ DEVICE = set_device()
 class Agent():
     def __init__(self,
                  env,
-                 gamma=config.gamma,
-                 tau=config.tau,
-                 epsilon=config.epsilon,
-                 min_epsilon=config.min_epsilon,
-                 epsilon_decay=config.epsilon_decay,
-                 buffer_size=config.buffer_size,
-                 learning_rate=config.learning_rate,
-                 batch_size=config.batch_size,
-                 device=DEVICE):
+                 gamma=0.99,
+                 tau=0.05,
+                 epsilon=1.,
+                 min_epsilon=0.01,
+                 epsilon_decay=0.99995,
+                 buffer_size=10_000,
+                 learning_rate=1e-5,
+                 batch_size=64,
+                 device="cpu"):
 
         self.device = device
         self.env = env
@@ -188,12 +188,12 @@ if __name__ == '__main__':
     env = AtariPreprocessing(env, frame_skip=4)
     env = FrameStack(env, 4)
     env = RecordVideo(env, './video', episode_trigger=lambda x: x%100==0)
-    agent = Agent(env, buffer_size=10_000)
+    agent = Agent(env, buffer_size=100)
 
     # W&B: watch the model
     wandb.watch(agent.Q)
     # wandb.watch(agent.Q_target)
-    agent.train(500)
+    agent.train(5)
 
     # NOTE: For __very__ serious training, save the model weights
     # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
