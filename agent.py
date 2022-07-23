@@ -154,8 +154,8 @@ class Agent():
 
             if episode % 100 == 0:
                 timestr = time.strftime("%Y%m%d-%H%M%S")
-                torch.save(agent.Q.state_dict(), f"model_weights_Q_e_{episode}_{timestr}.pth")
-                torch.save(agent.Q_target.state_dict(), f"model_weights_Q_target_episode{episode}_{timestr}.pth")
+                torch.save(self.Q.state_dict(), f"model_weights_Q_e_{episode}_{timestr}.pth")
+                torch.save(self.Q_target.state_dict(), f"model_weights_Q_target_episode{episode}_{timestr}.pth")
 
     def test(self):
 
