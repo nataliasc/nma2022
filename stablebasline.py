@@ -2,6 +2,10 @@
 import gym
 from gym.wrappers import AtariPreprocessing, FrameStack, RecordVideo
 from stable_baselines3 import DQN
+from stable_baselines3.common.logger import configure
+
+tmp_path = "/tmp/sb3_log/"
+new_logger = configure(tmp_path, ["tensorboard"])
 
 # useful: https://brosa.ca/blog/ale-release-v0.7/#openai-gym
 env = gym.make("ALE/Breakout-v5", frameskip=1)
