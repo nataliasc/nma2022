@@ -251,17 +251,17 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
                 running_loss = 0.0
 
                 # PLOT THE RESULTS
-    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
-
-    ax[0].plot(range(len(metrics['train_loss'])), metrics['train_loss'],
-               alpha=0.8, label='Train')
-    ax[0].plot(metrics['val_idx'], metrics['val_loss'], label='Valid')
-    ax[0].set_xlabel('Iteration')
-    ax[0].set_ylabel('Loss')
-    ax[0].legend()
-
-    plt.tight_layout()
-    plt.show()
+    # fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+    #
+    # ax[0].plot(range(len(metrics['train_loss'])), metrics['train_loss'],
+    #            alpha=0.8, label='Train')
+    # ax[0].plot(metrics['val_idx'], metrics['val_loss'], label='Valid')
+    # ax[0].set_xlabel('Iteration')
+    # ax[0].set_ylabel('Loss')
+    # ax[0].legend()
+    #
+    # plt.tight_layout()
+    # plt.show()
 
     # Export the model to torchscript
     model_scripted = torch.jit.script(model)
