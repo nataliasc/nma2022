@@ -140,7 +140,7 @@ def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
             loss_eval = loss_function(preds, norm_target)
             running_loss += loss_eval.cpu().item()
             # compute batch mean pearsonr
-            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), norm_target).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
+            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(norm_target, start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
             if batch_id == len(data_loader) - 1:
