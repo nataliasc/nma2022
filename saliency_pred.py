@@ -106,6 +106,22 @@ def plot_map(pred_map):
     return fig
 
 
+def normalise_map(batch):
+    """
+    normalise saliency map to between 0-1
+    :param batch: batch_size*84*84
+    :return: normalised map
+    """
+    flattened = torch.flatten(batch, start_dim=1)
+    flattened -= flattened.min(1, keepdim=True)[0]
+    flattened /= flattened.max(1, keepdim=True)[0]
+
+    # gets rid of nans
+    flattened = torch.nan_to_num(flattened, nan=0)
+
+    return torch.reshape(flattened, [len(batch), 84, 84])
+
+
 def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
     """
     evaluates the performance of saliency prediction by giving separate losses
@@ -131,8 +147,7 @@ def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
             # Evaluate model and loss on minibatch
             preds = model(data)
             preds = torch.squeeze(preds)  # raw pred dim: batch*1*84*84, target dim: batch*84*84
-            norm_target = F.normalize(torch.flatten(target, start_dim=1), dim=1)  # convert target to norm space for comparison
-            norm_target = torch.reshape(norm_target, [len(data), 84, 84]).float()
+            norm_target = normalise_map(target)
             # compute batch mean kl div
             kl_div = F.kl_div(preds, norm_target, reduction='batchmean', log_target=False).cpu().item()
             kl_log.append(kl_div)
@@ -210,9 +225,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
-            norm_target = F.normalize(torch.flatten(labels, start_dim=1),
-                                      dim=1)  # convert target to norm space for comparison
-            norm_target = torch.reshape(norm_target, [len(data), 84, 84]).float()
+            norm_target = normalise_map(labels)  # convert target to norm space for comparison
             loss = loss_function(torch.squeeze(preds), norm_target)
 
             # 4. calculate the gradients
