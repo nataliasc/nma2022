@@ -189,7 +189,7 @@ if __name__ == '__main__':
     env = AtariPreprocessing(env, frame_skip=4)
     env = FrameStack(env, 4)
     env = RecordVideo(env, './video', episode_trigger=lambda x: x % 1000 == 0)
-    agent = Agent(env, buffer_size=10000)
+    agent = Agent(env, buffer_size=config.buffer_size)
 
     # W&B: watch the model
     wandb.watch(agent.Q)
