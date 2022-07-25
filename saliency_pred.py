@@ -39,9 +39,9 @@ wandb.login(key='25f10546ef384a6f1ab9446b42d7513024dea001')
 wandb.init(project="saliency-prediction", entity="nma2022")
 
 config = wandb.config
-config.batch_size = 16
+config.batch_size = 64
 config.lr = 1e-3
-config.epoch = 500
+config.epoch = 100
 config.log_freq = 200
 config.val_freq = 200
 
@@ -56,9 +56,7 @@ test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=Tr
 net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
 #criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
-def criterion(imageA, imageB):
-    err = ((imageA.astype("float")-imageB.astype("float"))**2).mean()
-    return err
+criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
 
 wandb.watch(net, log_freq=100)
