@@ -55,7 +55,10 @@ test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=Tr
 #################
 net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
-criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
+#criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
+def criterion(imageA, imageB):
+    err = ((imageA.astype("float")-imageB.astype("float"))**2).mean()
+    return err
 optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
 
 wandb.watch(net, log_freq=100)
