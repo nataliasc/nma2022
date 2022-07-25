@@ -194,7 +194,7 @@ if __name__ == '__main__':
     # W&B: watch the model
     wandb.watch(agent.Q)
     # wandb.watch(agent.Q_target)
-    agent.train(5)
+    agent.train(config.num_episodes)
 
     # NOTE: For __very__ serious training, save the model weights
     # torch.save(agent.Q.state_dict(), 'model_weights_Q.pth')
