@@ -202,7 +202,8 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
-            loss = loss_function(torch.squeeze(preds), labels)
+            # loss = loss_function(torch.squeeze(preds), labels)  loss for kl div
+            loss = loss_function(torch.squeeze(preds), torch.log(labels))
 
             # 4. calculate the gradients
             loss.backward()
