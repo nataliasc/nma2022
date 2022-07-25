@@ -2,16 +2,18 @@
 import gym
 from gym.wrappers import AtariPreprocessing, FrameStack, RecordVideo
 from stable_baselines3 import DQN
-from utils_saliency import *
+from stable_baselines3.common.logger import configure
 
+tmp_path = "/tmp/sb3_log/"
+new_logger = configure(tmp_path, ["tensorboard"])
 
 # useful: https://brosa.ca/blog/ale-release-v0.7/#openai-gym
 env = gym.make("ALE/Breakout-v5", frameskip=1)
-
-env = AtariPreprocessing(env, frame_skip=1)
+env = AtariPreprocessing(env, frame_skip=4)
 env = FrameStack(env, 4)
 env = RecordVideo(env, './video', episode_trigger=lambda x: x % 1000 == 0)
 model = DQN("CnnPolicy", env, verbose=1, buffer_size=250_000)
+model.set_logger(new_logger)
 model.learn(total_timesteps=50_000, log_interval=4)
 model.save("dqn_breakout")
 
