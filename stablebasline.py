@@ -2,8 +2,6 @@
 import gym
 from gym.wrappers import AtariPreprocessing, FrameStack, RecordVideo
 from stable_baselines3 import DQN
-from utils_saliency import set_device, set_seed
-
 
 # useful: https://brosa.ca/blog/ale-release-v0.7/#openai-gym
 env = gym.make("ALE/Breakout-v5", frameskip=1)
