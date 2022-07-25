@@ -38,18 +38,6 @@ train_set, val_set, test_set = data.random_split(dataset, split, generator=torch
 wandb.login(key='25f10546ef384a6f1ab9446b42d7513024dea001')
 wandb.init(project="saliency-prediction", entity="nma2022")
 
-sweep_config = {
-    'method': 'bayes'
-    }
-
-metric = {
-    'name': 'val_loss',
-    'goal': 'minimize'
-    }
-
-sweep_config['metric'] = metric
-
-
 config = wandb.config
 config.batch_size = 100
 config.lr = 1e-3
