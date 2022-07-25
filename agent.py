@@ -15,7 +15,7 @@ import time
 wandb.init(project="test-project", entity="nma2022", monitor_gym=True)
 config = wandb.config
 config.num_episodes = 50000
-config.buffer_size = 10000
+config.buffer_size = 250000
 config.learning_rate = 1e-5
 config.gamma = 0.99
 config.tau = 1e-3
