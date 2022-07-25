@@ -106,9 +106,11 @@ def plot_map(pred_map):
     return fig
 
 
-def eval_model(model, data_loader=test_loader, device=DEVICE):
+def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
     """
     evaluates the performance of saliency prediction by giving separate losses
+    :param mode: str containing either test or val
+    :param loss_function: loss function
     :arg model: defined network object
     :arg data_loader: dataloader object containing either validation or test set
     :param device: cpu or gpu
@@ -120,6 +122,7 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
     # list containing metric for each batch
     kl_log = []
     corr_log = []
+    running_loss = 0
 
     with torch.no_grad():
         for batch_id, batch in enumerate(data_loader):
@@ -132,6 +135,9 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
             # compute batch mean kl div
             kl_div = F.kl_div(preds, log_target.float(), reduction='batchmean', log_target=False).cpu().item()
             kl_log.append(kl_div)
+            # MSE eval loss
+            loss_eval = loss_function(torch.squeeze(preds), torch.log(target))
+            running_loss += loss_eval.cpu().item()
             # compute batch mean pearsonr
             pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(log_target,
                                                                                              start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
@@ -139,11 +145,13 @@ def eval_model(model, data_loader=test_loader, device=DEVICE):
 
             if batch_id == len(data_loader) - 1:
                 pred_map = plot_map(torch.squeeze(preds[0, :, :].cpu()))
-                wandb.log({'val predicted saliency density': wandb.Image(pred_map)})
+                wandb.log({f'{mode} predicted saliency density': wandb.Image(pred_map)})
                 target_map = plot_map(torch.squeeze(log_target[0, :, :].cpu()))
-                wandb.log({'val target saliency density': wandb.Image(target_map)})
+                wandb.log({f'{mode} target saliency density': wandb.Image(target_map)})
 
-    return np.mean(kl_log), np.mean(corr_log)
+    avg_loss = running_loss / len(data_loader)
+
+    return np.mean(kl_log), np.mean(corr_log), avg_loss
 
 
 #################
@@ -217,10 +225,11 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
             # Every 1 in VAL_FREQ iterations, get validation metrics and print them
             # calling eval_model
             if batch_id % VAL_FREQ == (VAL_FREQ - 1):
-                kl_div, pearson_r = eval_model(net, val_loader, device=device)
+                kl_div, pearson_r, val_loss = eval_model(net, val_loader, loss_function, 'val', device=device)
                 wandb.log({
                     'val kl div': kl_div,
-                    'val pearson r': pearson_r
+                    'val pearson r': pearson_r,
+                    'val loss': val_loss
                 })
 
                 metrics['val_idx'].append(step_idx)
@@ -264,3 +273,11 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
 # %%
 trained_model = train(net, train_loader, val_loader, optimizer, criterion, eval_model)
+
+net.eval()
+with torch.no_grad():
+    kl_div, test_corr, test_loss = eval_model(net, test_loader, criterion, 'test')
+    wandb.log({
+        'test loss': test_loss,
+        'test pearson r': test_corr
+    })
