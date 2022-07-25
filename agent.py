@@ -140,8 +140,8 @@ class Agent():
                 for target_param, param in zip(self.Q_target.parameters(), self.Q.parameters()):
                     target_param.data.copy_(self.tau * param.data + target_param.data * (1.0 - self.tau))
 
-                # for param in self.Q.parameters(): # gradient clipping
-                #     param.grad.data.clamp_(-1, 1)
+                for param in self.Q.parameters():  # gradient clipping
+                    param.grad.data.clamp_(-1, 1)
 
                 self.optimizer.step()
                 # print(f"Episode {episode}: loss {loss.item()}")
@@ -154,8 +154,8 @@ class Agent():
 
             if episode % 100 == 0:
                 timestr = time.strftime("%Y%m%d-%H%M%S")
-                torch.save(self.Q.state_dict(), f"model_weights_Q_e_{episode}_{timestr}.pth")
-                torch.save(self.Q_target.state_dict(), f"model_weights_Q_target_episode{episode}_{timestr}.pth")
+                torch.save(self.Q.state_dict(), f"dqn/model_weights_Q_e_{episode}_{timestr}.pth")
+                torch.save(self.Q_target.state_dict(), f"dqn/model_weights_Q_target_episode{episode}_{timestr}.pth")
 
     def test(self):
 
@@ -179,6 +179,7 @@ if __name__ == '__main__':
     import gym
     from gym.wrappers import AtariPreprocessing, FrameStack
     import matplotlib.pyplot as plt
+
     DEVICE = set_device()
     SEED = 2022
     set_seed(seed=SEED)
@@ -187,7 +188,7 @@ if __name__ == '__main__':
     env = gym.make("ALE/Breakout-v5", frameskip=1)
     env = AtariPreprocessing(env, frame_skip=4)
     env = FrameStack(env, 4)
-    env = RecordVideo(env, './video', episode_trigger=lambda x: x%1000==0)
+    env = RecordVideo(env, './video', episode_trigger=lambda x: x % 1000 == 0)
     agent = Agent(env, buffer_size=10000)
 
     # W&B: watch the model
