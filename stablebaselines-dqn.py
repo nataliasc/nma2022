@@ -17,5 +17,5 @@ model = DQN("CnnPolicy",
             gradient_steps=1,
             exploration_fraction=0.1,
             exploration_final_eps=0.01)
-model.learn(total_timesteps=1000, log_interval=4)
+model.learn(total_timesteps=1e7, log_interval=4)
 model.save("dqn_breakout")
