@@ -56,11 +56,7 @@ test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=Tr
 #################
 net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
-#criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
-if config.loss == 'l1loss':
-    criterion = nn.L1Loss(reduction='mean')
-elif config.loss == 'mse':
-    criterion = nn.MSELoss()
+criterion = nn.MSELoss()
 # optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
 optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr)
 
