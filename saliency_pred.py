@@ -58,7 +58,7 @@ net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
 #criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
 if config.loss == 'l1loss':
-    criterion = nn.L1Loss()
+    criterion = nn.L1Loss(reduction='mean')
 elif config.loss == 'mse':
     criterion = nn.MSELoss()
 # optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
