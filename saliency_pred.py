@@ -44,6 +44,7 @@ config.lr = 1e-3
 config.epoch = 400
 config.log_freq = 200
 config.val_freq = 200
+config.loss = 'l1loss'
 
 train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
 val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
@@ -56,7 +57,10 @@ test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=Tr
 net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
 #criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
-criterion = nn.MSELoss()
+if config.loss == 'l1loss':
+    criterion = nn.L1Loss()
+elif config.loss == 'mse':
+    criterion = nn.MSELoss()
 # optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
 optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr)
 
