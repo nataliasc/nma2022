@@ -16,6 +16,10 @@ model = DQN("CnnPolicy",
             train_freq=4,
             gradient_steps=1,
             exploration_fraction=0.1,
-            exploration_final_eps=0.01)
-model.learn(total_timesteps=1e7, log_interval=4)
+            exploration_final_eps=0.01,
+            tensorboard_log="./tb-logs")
+model.learn(total_timesteps=1e7, log_interval=4,
+            tb_log_name="first_run")
 model.save("dqn_breakout")
+
+# run tensorboard --logdir ./tb-logs in the terminal
