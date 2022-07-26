@@ -26,7 +26,7 @@ set_seed(seed=SEED)
 #################
 # data preprocessing
 #################
-dataset = torch.load('processed_data/data.pt')
+dataset = torch.load('processed_data/data_1f.pt')
 total_samples = len(dataset)
 split = [int(.8 * total_samples), int(.1 * total_samples), int(.1 * total_samples)]
 train_set, val_set, test_set = data.random_split(dataset, split, generator=torch.Generator().manual_seed(SEED))

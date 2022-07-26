@@ -27,7 +27,7 @@ trial_ids = metadata_game['trial_id'].to_numpy()
 # hyperparameters controlling sampling
 n_skips = 1
 n_frames_per_episode = 1
-n_samples = 6000  # number of episodes taken from each trial
+n_samples = 5000  # number of episodes taken from each trial
 # list containing all data points
 episode_samples = []
 target_saliency_maps = []

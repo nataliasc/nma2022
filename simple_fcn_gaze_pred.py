@@ -33,7 +33,7 @@ class SimpleFCN(nn.Module):
         self.device = device
 
         self.encoder = nn.Sequential(
-            torch.nn.Conv2d(in_channels=4, out_channels=32, kernel_size=8, stride=4),
+            torch.nn.Conv2d(in_channels=1, out_channels=32, kernel_size=8, stride=4),
             torch.nn.BatchNorm2d(32),
             torch.nn.ReLU(),
 
