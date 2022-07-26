@@ -33,4 +33,4 @@ class SaliencyMap(gym.ObservationWrapper):
         product = np.multiply(frame, saliency_map)
         frame = np.mean( np.array([ frame, product]), axis=0 )
 
-        return frame
+        return frame[:, :, None]
