@@ -147,20 +147,20 @@ def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
             data, target = batch[0].float().to(device), batch[1].float().to(device)
             # Evaluate model and loss on minibatch
             preds = model(data)
-            preds_norm = normalise_map(torch.squeeze(preds))  # raw pred dim: batch*1*84*84, target dim: batch*84*84
+            # preds_norm = normalise_map(torch.squeeze(preds))  # raw pred dim: batch*1*84*84, target dim: batch*84*84
             norm_target = normalise_map(target)
             # compute batch mean kl div
-            kl_div = F.kl_div(preds_norm, norm_target, reduction='batchmean', log_target=False).cpu().item()
+            kl_div = F.kl_div(preds, norm_target, reduction='batchmean', log_target=False).cpu().item()
             kl_log.append(kl_div)
             # MSE eval loss
-            loss_eval = loss_function(preds_norm, norm_target)
+            loss_eval = loss_function(preds, norm_target)
             running_loss += loss_eval.cpu().item()
             # compute batch mean pearsonr
             pear_corr = pearson_r_batchmean(torch.flatten(preds_norm, start_dim=1), torch.flatten(norm_target, start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
             if batch_id == len(data_loader) - 1:
-                pred_map = plot_map(torch.squeeze(preds_norm[0, :, :].cpu()))
+                pred_map = plot_map(torch.squeeze(preds[0, :, :].cpu()))
                 wandb.log({f'{mode} predicted saliency density': wandb.Image(pred_map)})
                 target_map = plot_map(torch.squeeze(norm_target[0, :, :].cpu()))
                 wandb.log({f'{mode} target saliency density': wandb.Image(target_map)})
@@ -223,12 +223,12 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # 2. run forward prop (apply the convnet on the input data)
             preds = model(data)
-            preds_norm = normalise_map(torch.squeeze(preds))
+            # preds_norm = normalise_map(torch.squeeze(preds))
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
             norm_target = normalise_map(labels)  # convert target to norm space for comparison
-            loss = loss_function(torch.squeeze(preds_norm), norm_target)
+            loss = loss_function(torch.squeeze(preds), norm_target)
 
             # 4. calculate the gradients
             loss.backward()
