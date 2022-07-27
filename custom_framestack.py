@@ -16,13 +16,13 @@ class CustomFrameStack(gym.ObservationWrapper):
           - After :meth:`reset` is called, the frame buffer will be filled with the initial observation. I.e. the observation returned by :meth:`reset` will consist of ``num_stack`-many identical frames,
     Example:
         >>> import gym
-        >>> env = gym.make('CarRacing-v1')
+        >>> env = gym.make('something')
         >>> env = FrameStack(env, 4)
         >>> env.observation_space
-        Box(4 * 96, 96, 3)
+        Box(4, 84, 84)
         >>> obs = env.reset()
         >>> obs.shape
-        (4 * 96, 96, 3)
+        (4, 84, 84)
     """
 
     def __init__(
@@ -46,9 +46,6 @@ class CustomFrameStack(gym.ObservationWrapper):
         self.width = width
         self.height = height
 
-        # self.observation_space = spaces.Box(
-        #     low=0, high=255, shape=(int(self.height * num_stack), self.width, 1), dtype=env.observation_space.dtype
-        # )
         self.observation_space = spaces.Box(
             low=0, high=255, shape=(self.num_stack, self.height, self.width), dtype=env.observation_space.dtype
         )
