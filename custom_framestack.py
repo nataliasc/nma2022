@@ -19,7 +19,7 @@ class CustomFrameStack(gym.ObservationWrapper):
         >>> env = gym.make('something')
         >>> env = FrameStack(env, 4)
         >>> env.observation_space
-        Box(4, 84, 84)
+        Box(0, 255, (4, 84, 84), uint8)
         >>> obs = env.reset()
         >>> obs.shape
         (4, 84, 84)
@@ -51,7 +51,7 @@ class CustomFrameStack(gym.ObservationWrapper):
         )
 
     def observation(self, observation):
-        """Converts the wrappers current frames to lazy frames.
+        """Converts the wrapper's current frames to a numpy array.
         Args:
             observation: Ignored
         Returns:
