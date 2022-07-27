@@ -5,6 +5,7 @@ import torch as th
 from stable_baselines3 import DQN
 from stable_baselines3.common.atari_wrappers import AtariWrapper
 from saliency_wrapper import SaliencyMap
+from custom_framestack import CustomFrameStack
 
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -58,11 +59,12 @@ class VideoRecorderCallback(BaseCallback):
 
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariWrapper(env, frame_skip=4)
-env = SaliencyMap(env)
+# env = SaliencyMap(env) # needs to be modified!
+env = CustomFrameStack(env, 4)
 model = DQN("CnnPolicy",
             env,
             verbose=1,
-            buffer_size=100_000,
+            buffer_size=1000,
             learning_rate=1e-4,
             batch_size=32,
             learning_starts=100_000,
@@ -74,7 +76,7 @@ model = DQN("CnnPolicy",
             tensorboard_log="./tb-logs")
 
 video_recorder = VideoRecorderCallback(env, render_freq=100_000)
-model.learn(total_timesteps=1e7, log_interval=4,
-            tb_log_name="saliency_map",
+model.learn(total_timesteps=10_000, log_interval=4,
+            tb_log_name="stacked_frames",
             callback=video_recorder)
-model.save("dqn_breakout_saliency")
+model.save("dqn_breakout_stacked")
