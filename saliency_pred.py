@@ -289,6 +289,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
 
 # %%
+torch.autograd.set_detect_anomaly(True)
 trained_model = train(net, train_loader, val_loader, optimizer, criterion, eval_model)
 
 net.eval()
