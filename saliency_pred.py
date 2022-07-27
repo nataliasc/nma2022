@@ -14,7 +14,7 @@ import seaborn as sns
 from audtorch.metrics import PearsonR
 
 from utils_saliency import set_device, set_seed
-from simple_fcn_gaze_pred import SimpleFCN
+from FCN_1frame import SimpleFCN
 
 # set device and random seed
 DEVICE = set_device()
@@ -57,8 +57,8 @@ net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
 #criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
 criterion = nn.MSELoss()
-# optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
-optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr)
+optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
+# optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr)
 
 wandb.watch(net, log_freq=100)
 
