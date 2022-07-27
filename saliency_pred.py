@@ -147,7 +147,7 @@ def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
             data, target = batch[0].float().to(device), batch[1].float().to(device)
             # Evaluate model and loss on minibatch
             preds = model(data)
-            preds = torch.squeeze(preds)  # raw pred dim: batch*1*84*84, target dim: batch*84*84
+            preds = normalise_map(torch.squeeze(preds))  # raw pred dim: batch*1*84*84, target dim: batch*84*84
             norm_target = normalise_map(target)
             # compute batch mean kl div
             kl_div = F.kl_div(preds, norm_target, reduction='batchmean', log_target=False).cpu().item()
@@ -223,6 +223,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # 2. run forward prop (apply the convnet on the input data)
             preds = model(data)
+            preds = normalise_map(torch.squeeze(preds))
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
