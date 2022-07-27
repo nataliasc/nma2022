@@ -35,7 +35,7 @@ train_set, val_set, test_set = data.random_split(dataset, split, generator=torch
 #################
 # data set preparation
 #################
-wandb.login(key='25f10546ef384a6f1ab9446b42d7513024dea001')
+wandb.login(key='')
 wandb.init(project="saliency-prediction", entity="nma2022")
 
 config = wandb.config
