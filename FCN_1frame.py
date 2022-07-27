@@ -59,12 +59,14 @@ class SimpleFCN(nn.Module):
             torch.nn.ReLU()
         )
         # self.softmax = nn.Softmax(dim=2)  # if not working try dim=0 # TODO debug softmax, reason why output is wrong
+        self.linear = nn.Linear(in_features=84*84, out_features=84*84)
 
     def forward(self, x):  # x 1*84*84
         out = self.encoder(x)  # 1*64*10*10
         out = self.decoder(out)  # 1*1*25*25
         # out = F.log_softmax(torch.flatten(out, start_dim=2), dim=2)  # 1*1*84*84
-        return out  # predicted map 1*84*84, output in log space
+        out = self.linear(torch.flatten(out, start_dim=2))
+        return torch.reshape(out, [len(out), 84, 84])  # predicted map 1*84*84, output in log space
 
 
 # In[30]:
