@@ -107,6 +107,22 @@ def plot_map(pred_map):
     return fig
 
 
+def normalise_map(batch):
+    """
+    normalise saliency map to between 0-1
+    :param batch: batch_size*84*84
+    :return: normalised map
+    """
+    flattened = torch.flatten(batch, start_dim=1)
+    flattened -= flattened.min(1, keepdim=True)[0]
+    flattened /= flattened.max(1, keepdim=True)[0]
+
+    # gets rid of nans
+    flattened = torch.nan_to_num(flattened, nan=0)
+
+    return torch.reshape(flattened, [len(batch), 84, 84])
+
+
 def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
     """
     evaluates the performance of saliency prediction by giving separate losses
@@ -132,22 +148,21 @@ def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
             # Evaluate model and loss on minibatch
             preds = model(data)
             preds = torch.squeeze(preds)  # raw pred dim: batch*1*84*84, target dim: batch*84*84
-            log_target = torch.log(target)  # convert target to log space for comparison
+            norm_target = normalise_map(target)
             # compute batch mean kl div
-            kl_div = F.kl_div(preds, log_target.float(), reduction='batchmean', log_target=False).cpu().item()
+            kl_div = F.kl_div(preds, norm_target, reduction='batchmean', log_target=False).cpu().item()
             kl_log.append(kl_div)
             # MSE eval loss
-            loss_eval = loss_function(torch.squeeze(preds), torch.log(target))
+            loss_eval = loss_function(preds, norm_target)
             running_loss += loss_eval.cpu().item()
             # compute batch mean pearsonr
-            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(log_target,
-                                                                                             start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
+            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(norm_target, start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
             if batch_id == len(data_loader) - 1:
                 pred_map = plot_map(torch.squeeze(preds[0, :, :].cpu()))
                 wandb.log({f'{mode} predicted saliency density': wandb.Image(pred_map)})
-                target_map = plot_map(torch.squeeze(log_target[0, :, :].cpu()))
+                target_map = plot_map(torch.squeeze(norm_target[0, :, :].cpu()))
                 wandb.log({f'{mode} target saliency density': wandb.Image(target_map)})
 
     avg_loss = running_loss / len(data_loader)
@@ -211,8 +226,8 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
-            # loss = loss_function(torch.squeeze(preds), labels)  loss for kl div
-            loss = loss_function(torch.squeeze(preds), torch.log(labels))
+            norm_target = normalise_map(labels)  # convert target to norm space for comparison
+            loss = loss_function(torch.squeeze(preds), norm_target)
 
             # 4. calculate the gradients
             loss.backward()
