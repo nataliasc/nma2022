@@ -72,10 +72,10 @@ model = DQN("CnnPolicy",
             tensorboard_log="./tb-logs")
 
 video_recorder = VideoRecorderCallback(env, render_freq=100_000)
-model.learn(total_timesteps=1e7, log_interval=4,
+model.learn(total_timesteps=3e6, log_interval=4,
             tb_log_name="run_videos",
             callback=video_recorder)
-model.save("dqn_breakout-video")
+model.save("dqn_breakout-4fr_baseline")
 
 # run <tensorboard --logdir ./tb-logs> in the terminal
 # need to install <pip install moviepy>
