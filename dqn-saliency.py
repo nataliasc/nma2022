@@ -59,7 +59,7 @@ class VideoRecorderCallback(BaseCallback):
 
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariWrapper(env, frame_skip=4)
-# env = SaliencyMap(env) # needs to be modified!
+env = SaliencyMap4F(env) # needs to be tested
 env = CustomFrameStack(env, 4)
 model = DQN("CnnPolicy",
             env,
@@ -75,7 +75,7 @@ model = DQN("CnnPolicy",
             exploration_final_eps=0.01,
             tensorboard_log="./tb-logs")
 
-video_recorder = VideoRecorderCallback(env, render_freq=100_000)
+video_recorder = VideoRecorderCallback(env, render_freq=1000)
 model.learn(total_timesteps=10_000, log_interval=4,
             tb_log_name="stacked_frames",
             callback=video_recorder)
