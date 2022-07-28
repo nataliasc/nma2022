@@ -4,6 +4,7 @@ import gym
 import torch as th
 from stable_baselines3 import DQN
 from stable_baselines3.common.atari_wrappers import AtariWrapper
+from custom_framestack import CustomFrameStack
 
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -57,6 +58,7 @@ class VideoRecorderCallback(BaseCallback):
 
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariWrapper(env, frame_skip=4)
+env = CustomFrameStack(env, 4)
 model = DQN("CnnPolicy",
             env,
             verbose=1,
@@ -72,7 +74,7 @@ model = DQN("CnnPolicy",
             tensorboard_log="./tb-logs")
 
 video_recorder = VideoRecorderCallback(env, render_freq=100_000)
-model.learn(total_timesteps=3e6, log_interval=4,
+model.learn(total_timesteps=1e7, log_interval=4,
             tb_log_name="run_videos",
             callback=video_recorder)
 model.save("dqn_breakout-4fr_baseline")
