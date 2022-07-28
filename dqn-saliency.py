@@ -88,8 +88,8 @@ model = DQN("CnnPolicy",
             exploration_final_eps=0.01,
             tensorboard_log="./tb-logs")
 
-video_recorder = VideoRecorderCallback(env, render_freq=1000)
+# video_recorder = VideoRecorderCallback(env, render_freq=1000)
 model.learn(total_timesteps=int(3e6), log_interval=4,
-            tb_log_name="stacked_frames",
-            callback=video_recorder)
+            tb_log_name="stacked_frames")
+            # callback=video_recorder)
 model.save("dqn_breakout_stacked_salipred")
