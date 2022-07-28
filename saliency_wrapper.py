@@ -65,7 +65,7 @@ class SaliencyMap4F(gym.ObservationWrapper):
         # call to generate saliency map here
         frames = torch.tensor(frames).to(self.net_device)
         frames = torch.unsqueeze(frames, dim=0).float()  # add batch dim
-        saliency_map = torch.squeeze(self.s_map(frames)).cpu().numpy()
+        saliency_map = torch.squeeze(self.s_map(frames)).detach().cpu().numpy()
         frame_stack = []
         for i in range(frames.shape[0]):
             product = np.multiply(frames[i], saliency_map)
