@@ -41,14 +41,14 @@ wandb.init(project="saliency-prediction", entity="nma2022")
 config = wandb.config
 config.batch_size = 100
 config.lr = 1e-3
-config.epoch = 400
+config.epoch = 300
 config.log_freq = 200
 config.val_freq = 200
 config.loss = 'l1loss'
 
-train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
-val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
-test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
+train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=1)
+val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=1)
+test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=True, num_workers=1)
 
 # %%
 #################
@@ -282,7 +282,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     # Export the model to torchscript
     model_scripted = torch.jit.script(model)
     # Save the model
-    model_scripted.save('trained_sali_pred/model_scripted.pt')
+    model_scripted.save('trained_sali_pred/model_scripted_4f.pt')
 
     return model
 
