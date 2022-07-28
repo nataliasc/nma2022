@@ -73,10 +73,9 @@ model = DQN("CnnPolicy",
             exploration_final_eps=0.01,
             tensorboard_log="./tb-logs")
 
-video_recorder = VideoRecorderCallback(env, render_freq=100_000)
+# video_recorder = VideoRecorderCallback(env, render_freq=100_000)
 model.learn(total_timesteps=3e6, log_interval=4,
-            tb_log_name="run_videos",
-            callback=video_recorder)
+            tb_log_name="run_videos")
 model.save("dqn_breakout_4fr_baseline")
 
 # run <tensorboard --logdir ./tb-logs> in the terminal
