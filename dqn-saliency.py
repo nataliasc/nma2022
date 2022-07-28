@@ -77,7 +77,7 @@ env = SaliencyMap4F(env, pred_sali, DEVICE)  # needs to be tested
 model = DQN("CnnPolicy",
             env,
             verbose=1,
-            buffer_size=1000,
+            buffer_size=100_000,
             learning_rate=1e-4,
             batch_size=32,
             learning_starts=100_000,
