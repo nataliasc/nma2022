@@ -11,6 +11,15 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.logger import Video
 
+from simple_fcn_gaze_pred import SimpleFCN
+from utils_saliency import set_device
+import torch
+
+DEVICE = set_device()
+
+pred_sali = torch.jit.load('trained_sali_pred/model_scripted_4f.pt', map_location=DEVICE)
+pred_sali.eval()
+
 
 class VideoRecorderCallback(BaseCallback):
     def __init__(self, eval_env: gym.Env, render_freq: int, n_eval_episodes: int = 1, deterministic: bool = True):
@@ -60,7 +69,7 @@ class VideoRecorderCallback(BaseCallback):
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariWrapper(env, frame_skip=4)
 env = CustomFrameStack(env, 4)
-env = SaliencyMap4F(env) # needs to be tested
+env = SaliencyMap4F(env, pred_sali, DEVICE) # needs to be tested
 model = DQN("CnnPolicy",
             env,
             verbose=1,
