@@ -92,4 +92,4 @@ video_recorder = VideoRecorderCallback(env, render_freq=1000)
 model.learn(total_timesteps=int(3e6), log_interval=4,
             tb_log_name="stacked_frames",
             callback=video_recorder)
-model.save("dqn_breakout_stacked")
+model.save("dqn_breakout_stacked_salipred")
