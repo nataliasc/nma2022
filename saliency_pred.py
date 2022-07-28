@@ -41,7 +41,7 @@ wandb.init(project="saliency-prediction", entity="nma2022")
 config = wandb.config
 config.batch_size = 100
 config.lr = 1e-2
-config.epoch = 400
+config.epoch = 300
 config.log_freq = 200
 config.val_freq = 200
 
