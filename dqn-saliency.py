@@ -66,10 +66,11 @@ class VideoRecorderCallback(BaseCallback):
             )
         return True
 
+
 env = gym.make("ALE/Breakout-v5", frameskip=1)
 env = AtariWrapper(env, frame_skip=4)
 env = CustomFrameStack(env, 4)
-env = SaliencyMap4F(env, pred_sali, DEVICE) # needs to be tested
+env = SaliencyMap4F(env, pred_sali, DEVICE)  # needs to be tested
 model = DQN("CnnPolicy",
             env,
             verbose=1,
