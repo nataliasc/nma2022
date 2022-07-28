@@ -285,7 +285,7 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     # Export the model to torchscript
     model_scripted = torch.jit.script(model)
     # Save the model
-    model_scripted.save('trained_sali_pred/model_scripted.pt')
+    model_scripted.save('trained_sali_pred/model_scripted_1f.pt')
 
     return model
 
