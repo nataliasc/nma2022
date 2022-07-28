@@ -4,7 +4,7 @@ import gym
 import torch as th
 from stable_baselines3 import DQN
 from stable_baselines3.common.atari_wrappers import AtariWrapper
-from saliency_wrapper import SaliencyMap
+from saliency_wrapper import SaliencyMap, SaliencyMap4F
 from custom_framestack import CustomFrameStack
 
 from stable_baselines3.common.callbacks import BaseCallback
