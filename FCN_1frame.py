@@ -65,8 +65,8 @@ class SimpleFCN(nn.Module):
         out = self.encoder(x)  # 1*64*10*10
         out = self.decoder(out)  # 1*1*25*25
         # out = F.log_softmax(torch.flatten(out, start_dim=2), dim=2)  # 1*1*84*84
-        # out = self.linear(torch.flatten(out, start_dim=2))
-        return out  # torch.reshape(out, [len(out), 84, 84])  # predicted map 1*84*84, output in log space
+        out = self.linear(torch.flatten(out, start_dim=2))
+        return torch.reshape(out, [len(out), 84, 84])  # predicted map 1*84*84, output in log space
 
 
 # In[30]:
