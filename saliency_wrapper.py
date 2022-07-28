@@ -1,8 +1,6 @@
 import gym
 import torch
 from gym import spaces
-from scipy import ndimage as ndi
-import cv2
 import numpy as np
 
 
@@ -15,11 +13,8 @@ class SaliencyMap(gym.ObservationWrapper):
             low=0, high=255, shape=(self.height, self.width, 1), dtype=env.observation_space.dtype
         )
 
-        # mock saliency map
+        # saliency map
         self.s_map = net # net for saliency pred
-        cv2.circle(self.s_map, (30, 42), radius=4, color=1, thickness=1)
-        self.s_map = ndi.gaussian_filter(self.s_map, sigma=6)
-
 
     def observation(self, frame: np.ndarray) -> np.ndarray:
         """
@@ -50,8 +45,6 @@ class SaliencyMap4F(gym.ObservationWrapper):
         # load net
         self.s_map = net
         self.net_device = device
-        # cv2.circle(self.s_map, (30, 42), radius=4, color=1, thickness=1)
-        # self.s_map = ndi.gaussian_filter(self.s_map, sigma=9)
 
 
     def observation(self, frames: np.ndarray) -> np.ndarray:
@@ -68,9 +61,9 @@ class SaliencyMap4F(gym.ObservationWrapper):
         saliency_map = torch.squeeze(self.s_map(frames)).detach().cpu().numpy()
         frame_stack = []
         frames = frames.cpu().numpy()
-        for i in range(frames.shape[0]):
+        for i in range(frames.shape[1]):
             product = np.multiply(frames[i], saliency_map)
             frame = np.mean( np.array([ frames[i], product]), axis=0 )
             frame_stack.append(frame)
 
-        return np.array(frame_stack)[:, :, :]
+        return np.array(frame_stack)[0, :, :, :]
