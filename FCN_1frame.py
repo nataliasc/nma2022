@@ -60,6 +60,7 @@ class SimpleFCN(nn.Module):
         )
         # self.softmax = nn.Softmax(dim=2)  # if not working try dim=0 # TODO debug softmax, reason why output is wrong
         self.linear = nn.Linear(in_features=84*84, out_features=84*84)
+        torch.nn.init.xavier_uniform(self.linear.weight)
 
     def forward(self, x):  # x 1*84*84
         out = self.encoder(x)  # 1*64*10*10
