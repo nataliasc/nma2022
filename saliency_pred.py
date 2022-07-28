@@ -40,7 +40,7 @@ wandb.init(project="saliency-prediction", entity="nma2022")
 
 config = wandb.config
 config.batch_size = 100
-config.lr = 1e-2
+config.lr = 1e-3
 config.epoch = 300
 config.log_freq = 200
 config.val_freq = 200
@@ -55,11 +55,10 @@ test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=Tr
 #################
 net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
-# criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
+#criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
 criterion = nn.MSELoss()
-# optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
-optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr,
-                              weight_decay=1e-8)
+optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
+# optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr)
 
 wandb.watch(net, log_freq=100)
 
@@ -157,8 +156,7 @@ def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
             loss_eval = loss_function(preds, norm_target)
             running_loss += loss_eval.cpu().item()
             # compute batch mean pearsonr
-            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(norm_target,
-                                                                                             start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
+            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(norm_target, start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
             if batch_id == len(data_loader) - 1:
