@@ -20,6 +20,7 @@ DEVICE = set_device()
 pred_sali = SimpleFCN(1, DEVICE)
 trained_model = torch.jit.load('trained_sali_pred/model_scripted_4f.pt', map_location=DEVICE)
 pred_sali.load_state_dict(trained_model.state_dict())
+pred_sali.float().to(DEVICE)
 pred_sali.eval()
 
 
