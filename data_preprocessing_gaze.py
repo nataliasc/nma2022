@@ -25,9 +25,9 @@ print(metadata_game.head())
 # frames resized to 84*84
 trial_ids = metadata_game['trial_id'].to_numpy()
 # hyperparameters controlling sampling
-n_skips = 4
-n_frames_per_episode = 4
-n_samples = 4000  # number of episodes taken from each trial
+n_skips = 1
+n_frames_per_episode = 1
+n_samples = 5000  # number of episodes taken from each trial
 # list containing all data points
 episode_samples = []
 target_saliency_maps = []
@@ -63,7 +63,7 @@ for trial in trial_ids:
     ################################
     for times in range(n_samples):
         episode, start_idx = get_episode(n_skips, n_frames_per_episode, gaze_data, all_grey_frames)
-        saliency_density = create_saliency_density(start_idx, n_skips, n_frames_per_episode, [84, 84], gaze_maps)
+        saliency_density = create_saliency_density(start_idx, n_skips, n_frames_per_episode, (84, 84), gaze_maps)
 
         episode_samples.append(episode)
         target_saliency_maps.append(saliency_density)
@@ -76,4 +76,4 @@ print(f'n samples in dataset {len(X)}')
 dataset = data.TensorDataset(X, y)
 
 #save file
-torch.save(dataset, 'processed_data/data.pt')
+torch.save(dataset, 'processed_data/data_1f.pt')

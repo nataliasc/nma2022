@@ -26,7 +26,7 @@ set_seed(seed=SEED)
 #################
 # data preprocessing
 #################
-dataset = torch.load('processed_data/data_1f.pt')
+dataset = torch.load('processed_data/data.pt')
 total_samples = len(dataset)
 split = [int(.8 * total_samples), int(.1 * total_samples), int(.1 * total_samples)]
 train_set, val_set, test_set = data.random_split(dataset, split, generator=torch.Generator().manual_seed(SEED))
@@ -41,13 +41,13 @@ wandb.init(project="saliency-prediction", entity="nma2022")
 config = wandb.config
 config.batch_size = 100
 config.lr = 1e-3
-config.epoch = 300
+config.epoch = 400
 config.log_freq = 200
 config.val_freq = 200
 
-train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=1)
-val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=1)
-test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=True, num_workers=1)
+train_loader = data.DataLoader(train_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
+val_loader = data.DataLoader(val_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
+test_loader = data.DataLoader(test_set, batch_size=config.batch_size, shuffle=True, num_workers=2)
 
 # %%
 #################
@@ -57,8 +57,8 @@ net = SimpleFCN(config.batch_size, DEVICE)
 net.float().to(DEVICE)
 #criterion = nn.KLDivLoss(reduction="batchmean", log_target=True)
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
-# optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr)
+# optimizer = torch.optim.Adam(net.parameters(), lr=config.lr)
+optimizer = torch.optim.AdamW(net.parameters(), lr=config.lr)
 
 wandb.watch(net, log_freq=100)
 
@@ -107,22 +107,6 @@ def plot_map(pred_map):
     return fig
 
 
-def normalise_map(batch):
-    """
-    normalise saliency map to between 0-1
-    :param batch: batch_size*84*84
-    :return: normalised map
-    """
-    flattened = torch.flatten(batch, start_dim=1)
-    flattened -= flattened.min(1, keepdim=True)[0]
-    flattened /= flattened.max(1, keepdim=True)[0]
-
-    # gets rid of nans
-    flattened = torch.nan_to_num(flattened, nan=0)
-
-    return torch.reshape(flattened, [len(batch), 84, 84])
-
-
 def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
     """
     evaluates the performance of saliency prediction by giving separate losses
@@ -147,22 +131,23 @@ def eval_model(model, data_loader, loss_function, mode, device=DEVICE):
             data, target = batch[0].float().to(device), batch[1].float().to(device)
             # Evaluate model and loss on minibatch
             preds = model(data)
-            # preds_norm = normalise_map(torch.squeeze(preds))  # raw pred dim: batch*1*84*84, target dim: batch*84*84
-            norm_target = normalise_map(target)
+            preds = torch.squeeze(preds)  # raw pred dim: batch*1*84*84, target dim: batch*84*84
+            log_target = torch.log(target)  # convert target to log space for comparison
             # compute batch mean kl div
-            kl_div = F.kl_div(preds, norm_target, reduction='batchmean', log_target=False).cpu().item()
+            kl_div = F.kl_div(preds, log_target.float(), reduction='batchmean', log_target=False).cpu().item()
             kl_log.append(kl_div)
             # MSE eval loss
-            loss_eval = loss_function(preds, norm_target)
+            loss_eval = loss_function(torch.squeeze(preds), torch.log(target))
             running_loss += loss_eval.cpu().item()
             # compute batch mean pearsonr
-            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(norm_target, start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
+            pear_corr = pearson_r_batchmean(torch.flatten(preds, start_dim=1), torch.flatten(log_target,
+                                                                                             start_dim=1)).cpu().item()  # reshape pred and target to batch_size*num_pixels to fit PearsonR() class
             corr_log.append(pear_corr)
 
             if batch_id == len(data_loader) - 1:
                 pred_map = plot_map(torch.squeeze(preds[0, :, :].cpu()))
                 wandb.log({f'{mode} predicted saliency density': wandb.Image(pred_map)})
-                target_map = plot_map(torch.squeeze(norm_target[0, :, :].cpu()))
+                target_map = plot_map(torch.squeeze(log_target[0, :, :].cpu()))
                 wandb.log({f'{mode} target saliency density': wandb.Image(target_map)})
 
     avg_loss = running_loss / len(data_loader)
@@ -223,12 +208,11 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
 
             # 2. run forward prop (apply the convnet on the input data)
             preds = model(data)
-            # preds_norm = normalise_map(torch.squeeze(preds))
 
             # 3. define loss by our criterion (e.g. cross entropy loss)
             # 1st arg: predictions, 2nd arg: data
-            norm_target = normalise_map(labels)  # convert target to norm space for comparison
-            loss = loss_function(torch.squeeze(preds), norm_target)
+            # loss = loss_function(torch.squeeze(preds), labels)  loss for kl div
+            loss = loss_function(torch.squeeze(preds), torch.log(labels))
 
             # 4. calculate the gradients
             loss.backward()
@@ -283,13 +267,12 @@ def train(model, train_loader, val_loader, optimizer, loss_function, eval_model,
     # Export the model to torchscript
     model_scripted = torch.jit.script(model)
     # Save the model
-    model_scripted.save('trained_sali_pred/model_scripted_1f.pt')
+    model_scripted.save('trained_sali_pred/model_scripted.pt')
 
     return model
 
 
 # %%
-torch.autograd.set_detect_anomaly(True)
 trained_model = train(net, train_loader, val_loader, optimizer, criterion, eval_model)
 
 net.eval()

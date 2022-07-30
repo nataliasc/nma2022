@@ -171,10 +171,10 @@ def get_episode(skip_fr, num_frames, gaze_data_list, all_frames):
     episode_ = np.zeros((num_frames, all_frames[0].shape[0], all_frames[0].shape[1]))
 
     # check whether they are from the same game
-    if gaze_data_list[start_index][1] != 'null':  # check episode_id field, if not null there are multiple episodes
+    if gaze_data_list[start_index][1] != 'null' and num_frames > 1:  # check episode_id field, if not null there are multiple episodes
         # get episode id from all sampled frames
         last_epi_id = gaze_data_list[sampled_idx[0]][1]
-        for fr in range(1, num_frames):
+        for fr in np.arange(1, num_frames):
             current_epi_id = gaze_data_list[sampled_idx[fr]][1]
             if last_epi_id != current_epi_id:
                 episode_, start_index = get_episode(skip_fr, num_frames, gaze_data_list, all_frames)
@@ -199,11 +199,11 @@ def create_saliency_density(start_index, skips, num_frames, density_map_dim, all
     saliency_density_map = np.zeros(all_gaze_maps[0].shape)
     map_count = skips * num_frames  # total number of gaze position maps to be combined
     # compile all included gaze position maps
-    for m in range(map_count):
+    for m in np.arange(map_count):
         saliency_density_map += all_gaze_maps[start_index + m]
 
     # resize
-    saliency_density_map = cv2.resize(saliency_density_map, (84, 84))
+    saliency_density_map = cv2.resize(saliency_density_map, density_map_dim)
     # gaussian smoothing
     saliency_density_map = gaussian_filter(saliency_density_map, sigma=5)
     # softmax
